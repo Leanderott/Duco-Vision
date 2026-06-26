@@ -2,46 +2,83 @@ let chart;
 let history = [];
 
 // -------------------------
-// USER SYSTEM
+// START (WICHTIG)
+// -------------------------
+window.addEventListener("load", () => {
+    initApp();
+});
+
+// -------------------------
+// APP START
+// -------------------------
+function initApp() {
+    const user = localStorage.getItem("duco_user");
+
+    if (!user) {
+        showLogin();
+        return;
+    }
+
+    startDashboard();
+}
+
+// -------------------------
+// LOGIN UI
+// -------------------------
+function showLogin() {
+    document.body.innerHTML = `
+        <div style="
+            display:flex;
+            flex-direction:column;
+            justify-content:center;
+            align-items:center;
+            height:100vh;
+            font-family:Arial;
+            background:#0d1117;
+            color:white;
+        ">
+            <h1>🪙 DUCO Dashboard</h1>
+            <input id="username" placeholder="DUCO Username" style="
+                padding:10px;
+                border-radius:8px;
+                border:none;
+                margin-top:20px;
+                width:200px;
+            ">
+            <button onclick="saveUser()" style="
+                margin-top:10px;
+                padding:10px 20px;
+                border:none;
+                border-radius:8px;
+                background:orange;
+                cursor:pointer;
+            ">Start</button>
+        </div>
+    `;
+}
+
+// -------------------------
+// SAVE USER
 // -------------------------
 function saveUser() {
     const user = document.getElementById("username").value.trim();
     if (!user) return alert("Bitte Username eingeben!");
 
     localStorage.setItem("duco_user", user);
-    start();
-}
-
-function getUser() {
-    return localStorage.getItem("duco_user");
+    location.reload();
 }
 
 // -------------------------
-// START
+// START DASHBOARD
 // -------------------------
-window.addEventListener("load", () => {
-    const user = getUser();
-
-    if (user) {
-        start();
-    }
-});
-
-// -------------------------
-// MAIN START FUNCTION
-// -------------------------
-function start() {
-    const user = getUser();
-    if (!user) return;
-
+function startDashboard() {
     initChart();
-
     fetchData();
     setInterval(fetchData, 5000);
 }
 
 // -------------------------
-// CHART INIT
+// CHART
 // -------------------------
 function initChart() {
     const canvas = document.getElementById("chart");
@@ -74,10 +111,10 @@ function initChart() {
 }
 
 // -------------------------
-// FETCH DATA
+// API FETCH
 // -------------------------
 async function fetchData() {
-    const user = getUser();
+    const user = localStorage.getItem("duco_user");
     if (!user) return;
 
     try {
@@ -90,12 +127,12 @@ async function fetchData() {
         const hashrate = data.result.hashrate || 0;
         const miners = data.result.miners?.length || 0;
 
-        // echter Preis fallback (stabil)
+        // fake but stable price (DUCO API ist oft instabil)
         const priceUSD = 0.0001 + Math.random() * 0.00005;
         const eurRate = 0.92;
         const priceEUR = priceUSD * eurRate;
 
-        // UI
+        // UI updates
         document.getElementById("balance").innerText =
             balance.toFixed(2) + " DUCO";
 
@@ -119,7 +156,7 @@ async function fetchData() {
 }
 
 // -------------------------
-// CHART UPDATE (GREEN / RED)
+// CHART UPDATE
 // -------------------------
 function updateChart(price) {
     if (!chart) return;
@@ -130,7 +167,6 @@ function updateChart(price) {
     if (history.length > 50) history.shift();
 
     chart.data.labels.push("");
-
     chart.data.datasets[0].data.push(price);
 
     if (chart.data.labels.length > 50) {
