@@ -1,83 +1,49 @@
-body {
-    margin:0;
-    font-family:Arial;
-    background:#0d1117;
-    color:white;
-}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DUCO Login</title>
 
-.topbar {
-    display:flex;
-    gap:10px;
-    padding:10px;
-    background:#161b22;
-    align-items:center;
-}
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
 
-button {
-    background:orange;
-    border:none;
-    padding:8px 12px;
-    border-radius:8px;
-    cursor:pointer;
-}
+<body>
 
-.center {
-    text-align:center;
-    margin-top:80px;
-}
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-bg">
 
-input {
-    padding:10px;
-    border-radius:8px;
-    border:none;
-}
+    <div class="login-box">
+        <h1>🪙 DUCO LOGIN</h1>
 
-.tab {
-    padding:20px;
-}
+        <input id="username" placeholder="Duino-Coin Username">
 
-.hidden {
-    display:none;
-}
+        <button onclick="login()">Bestätigen</button>
+    </div>
 
-.grid {
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-    gap:10px;
-}
+</div>
 
-.card {
-    background:#161b22;
-    padding:15px;
-    border-radius:10px;
-    text-align:center;
-}
+<!-- DASHBOARD -->
+<div id="app" class="hidden">
 
-#chart {
-    margin-top:20px;
-    background:#161b22;
-    border-radius:10px;
-    padding:10px;
-}
+    <div class="topbar">
+        <h2>DUCO Dashboard</h2>
+    </div>
 
-/* RGB DONATE BOX */
-.rgb-box {
-    margin-top:20px;
-    padding:20px;
-    border-radius:15px;
-    text-align:center;
-    animation: rgb 5s infinite linear;
-}
+    <div class="grid">
 
-@keyframes rgb {
-    0% { background:red; }
-    25% { background:blue; }
-    50% { background:green; }
-    75% { background:purple; }
-    100% { background:red; }
-}
+        <div class="card">💰 <div id="balance">-</div></div>
+        <div class="card">📈 <div id="price">-</div></div>
+        <div class="card">⚡ <div id="hashrate">-</div></div>
+        <div class="card">⛏️ <div id="miners">-</div></div>
 
-.small {
-    opacity:0.7;
-    font-size:12px;
-}
+    </div>
+
+    <canvas id="chart"></canvas>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

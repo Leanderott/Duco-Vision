@@ -2,62 +2,24 @@ let chart;
 let history = [];
 
 // ---------------- LOGIN ----------------
-function saveUser() {
-    const u = document.getElementById("username").value.trim();
-    if (!u) return;
+function login() {
+    const user = document.getElementById("username").value.trim();
+    if (!user) return alert("Bitte Username eingeben!");
 
-    localStorage.setItem("duco_user", u);
-    location.reload();
+    // kein speichern → jedes Mal neu Login wie gewünscht
+    startDashboard(user);
 }
 
-function getUser() {
-    return localStorage.getItem("duco_user");
-}
+// ---------------- START DASHBOARD ----------------
+function startDashboard(user) {
 
-// ---------------- START ----------------
-window.addEventListener("load", () => {
-    const user = getUser();
-
-    if (!user) {
-        document.getElementById("login").style.display = "block";
-        document.getElementById("dashboard").style.display = "none";
-        return;
-    }
-
-    document.getElementById("login").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
-
-    document.getElementById("donateUser").innerText = user;
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
 
     initChart();
-    fetchData();
-    setInterval(fetchData, 5000);
-});
+    fetchData(user);
 
-// ---------------- TABS ----------------
-function showTab(tab) {
-    document.querySelectorAll(".tab").forEach(t => t.classList.add("hidden"));
-    document.getElementById(tab).classList.remove("hidden");
-}
-
-// ---------------- CHAT ----------------
-function sendChat() {
-    const input = document.getElementById("chatInput");
-    const msg = input.value;
-    if (!msg) return;
-
-    const div = document.createElement("div");
-    div.innerText = "💬 " + msg;
-
-    document.getElementById("chatBox").appendChild(div);
-    input.value = "";
-}
-
-// ---------------- DONATE ----------------
-function copyDonate() {
-    const user = getUser();
-    navigator.clipboard.writeText(user);
-    alert("Copied: " + user);
+    setInterval(() => fetchData(user), 5000);
 }
 
 // ---------------- CHART ----------------
@@ -79,35 +41,35 @@ function initChart() {
 }
 
 // ---------------- DATA ----------------
-async function fetchData() {
-    const user = getUser();
-    if (!user) return;
+async function fetchData(user) {
 
-    const res = await fetch(`https://server.duinocoin.com/users/${user}`);
-    const data = await res.json();
+    try {
+        const res = await fetch(`https://server.duinocoin.com/users/${user}`);
+        const data = await res.json();
 
-    if (!data.result) return;
+        if (!data.result) return;
 
-    const balance = data.result.balance || 0;
-    const hashrate = data.result.hashrate || 0;
-    const miners = data.result.miners?.length || 0;
+        const b = data.result.balance || 0;
+        const h = data.result.hashrate || 0;
+        const m = data.result.miners?.length || 0;
 
-    const price = 0.0001 + Math.random() * 0.00005;
-    const eur = price * 0.92;
+        const price = 0.0001 + Math.random() * 0.00005;
 
-    document.getElementById("balance").innerText = balance;
-    document.getElementById("hashrate").innerText = hashrate;
-    document.getElementById("miners").innerText = miners;
-    document.getElementById("price").innerHTML = `$${price} USD / €${eur}`;
+        document.getElementById("balance").innerText = b;
+        document.getElementById("hashrate").innerText = h;
+        document.getElementById("miners").innerText = m;
+        document.getElementById("price").innerText = price.toFixed(6);
 
-    updateChart(price);
+        updateChart(price);
 
-    document.getElementById("updated").innerText =
-        "Updated " + new Date().toLocaleTimeString();
+    } catch (e) {
+        console.log(e);
+    }
 }
 
-// ---------------- CHART ----------------
+// ---------------- CHART UPDATE ----------------
 function updateChart(p) {
+
     const last = history[history.length - 1];
     history.push(p);
 
