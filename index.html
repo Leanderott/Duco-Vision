@@ -11,60 +11,74 @@
 
 <body>
 
-<div class="topbar">
-    <h1>🪙 DUCO Dashboard</h1>
-    <button onclick="showTab('dashboard')">📊 Dashboard</button>
-    <button onclick="showTab('chat')">💬 Chat</button>
-    <button onclick="showTab('donate')">🎁 Donate</button>
-</div>
-
 <!-- LOGIN -->
 <div id="login" class="center">
-    <h2>Enter DUCO Username</h2>
-    <input id="username" placeholder="Username">
+    <h1>🪙 DUCO Dashboard</h1>
+
+    <input id="username" placeholder="DUCO Username">
     <button onclick="saveUser()">Start</button>
 </div>
 
 <!-- DASHBOARD -->
-<div id="dashboard" class="tab">
+<div id="dashboard" class="tab hidden">
+
+    <h1>📊 DUCO Overview</h1>
 
     <div class="grid">
-        <div class="card">💰 <div id="balance">-</div></div>
-        <div class="card">📈 <div id="price">-</div></div>
-        <div class="card">⚡ <div id="hashrate">-</div></div>
-        <div class="card">⛏️ <div id="miners">-</div></div>
-        <div class="card">🪙 Today <div id="today">-</div></div>
-        <div class="card">📊 Avg <div id="avg">-</div></div>
+
+        <div class="card">
+            💰 Balance
+            <h2 id="balance">-</h2>
+        </div>
+
+        <div class="card">
+            📈 Price
+            <h2 id="price">-</h2>
+        </div>
+
+        <div class="card">
+            ⚡ Hashrate
+            <h2 id="hashrate">-</h2>
+        </div>
+
+        <div class="card">
+            ⛏️ Miners
+            <h2 id="miners">-</h2>
+        </div>
+
+        <div class="card">
+            🔄 Updated
+            <h2 id="updated">-</h2>
+        </div>
+
     </div>
 
-    <canvas id="chart"></canvas>
-    <p id="updated"></p>
+    <div class="chartBox">
+        <canvas id="chart"></canvas>
+    </div>
+
 </div>
 
-<!-- CHAT -->
+<!-- CHAT TAB -->
 <div id="chat" class="tab hidden">
-    <h2>💬 Chat (local)</h2>
+    <h2>💬 Chat</h2>
 
-    <div id="chatBox"></div>
+    <div id="chatBox" class="chatBox"></div>
 
     <input id="chatInput" placeholder="Message...">
     <button onclick="sendChat()">Send</button>
 </div>
 
-<!-- DONATE -->
+<!-- DONATE TAB -->
 <div id="donate" class="tab hidden">
     <h2>🎁 Donate DUCO</h2>
 
-    <div class="rgb-box">
-        <h3 id="donateUser">Dein Name</h3>
-        <p>Duino-Coin Donation</p>
+    <div class="donateBox">
+        <h3 id="donateUser">-</h3>
+        <p>Send DUCO to this username</p>
 
-        <button onclick="copyDonate()">📋 Copy Address</button>
+        <button onclick="copyDonate()">📋 Copy Username</button>
     </div>
-
-    <p class="small">
-        Sende DUCO an deinen Username als Donation 💚
-    </p>
 </div>
 
 <script src="script.js"></script>
