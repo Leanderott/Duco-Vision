@@ -1,71 +1,72 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>DUCO Dashboard</title>
+<title>DUCO Overview</title>
 
 <link rel="stylesheet" href="style.css">
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 </head>
 
 <body>
 
-<div class="container">
-
-<h1>🪙 DUCO Dashboard</h1>
-
-<div class="cards">
-
-<div class="card">
-<h2>💰 Guthaben</h2>
-<p id="balance">Lädt...</p>
+<div class="topbar">
+    <h1>🪙 DUCO Dashboard</h1>
+    <button onclick="showTab('dashboard')">📊 Dashboard</button>
+    <button onclick="showTab('chat')">💬 Chat</button>
+    <button onclick="showTab('donate')">🎁 Donate</button>
 </div>
 
-<div class="card">
-<h2>📈 Kurs</h2>
-<p id="price">Lädt...</p>
+<!-- LOGIN -->
+<div id="login" class="center">
+    <h2>Enter DUCO Username</h2>
+    <input id="username" placeholder="Username">
+    <button onclick="saveUser()">Start</button>
 </div>
 
-<div class="card">
-<h2>🪙 Heute verdient</h2>
-<p id="today">Lädt...</p>
+<!-- DASHBOARD -->
+<div id="dashboard" class="tab">
+
+    <div class="grid">
+        <div class="card">💰 <div id="balance">-</div></div>
+        <div class="card">📈 <div id="price">-</div></div>
+        <div class="card">⚡ <div id="hashrate">-</div></div>
+        <div class="card">⛏️ <div id="miners">-</div></div>
+        <div class="card">🪙 Today <div id="today">-</div></div>
+        <div class="card">📊 Avg <div id="avg">-</div></div>
+    </div>
+
+    <canvas id="chart"></canvas>
+    <p id="updated"></p>
 </div>
 
-<div class="card">
-<h2>📊 Durchschnitt / 24h</h2>
-<p id="average">Lädt...</p>
+<!-- CHAT -->
+<div id="chat" class="tab hidden">
+    <h2>💬 Chat (local)</h2>
+
+    <div id="chatBox"></div>
+
+    <input id="chatInput" placeholder="Message...">
+    <button onclick="sendChat()">Send</button>
 </div>
 
-<div class="card">
-<h2>⚡ Hashrate</h2>
-<p id="hashrate">Lädt...</p>
-</div>
+<!-- DONATE -->
+<div id="donate" class="tab hidden">
+    <h2>🎁 Donate DUCO</h2>
 
-<div class="card">
-<h2>⛏️ Miner</h2>
-<p id="miners">Lädt...</p>
-</div>
+    <div class="rgb-box">
+        <h3 id="donateUser">Dein Name</h3>
+        <p>Duino-Coin Donation</p>
 
-</div>
+        <button onclick="copyDonate()">📋 Copy Address</button>
+    </div>
 
-<div class="chartCard">
-
-<h2>📈 DUCO Kurs</h2>
-
-<canvas id="priceChart"></canvas>
-
-</div>
-
-<p id="updated">Aktualisierung...</p>
-
+    <p class="small">
+        Sende DUCO an deinen Username als Donation 💚
+    </p>
 </div>
 
 <script src="script.js"></script>
-
 </body>
 </html>

@@ -1,90 +1,68 @@
 let chart;
 let history = [];
 
-// -------------------------
-// START (WICHTIG)
-// -------------------------
-window.addEventListener("load", () => {
-    initApp();
-});
-
-// -------------------------
-// APP START
-// -------------------------
-function initApp() {
-    const user = localStorage.getItem("duco_user");
-
-    if (!user) {
-        showLogin();
-        return;
-    }
-
-    startDashboard();
-}
-
-// -------------------------
-// LOGIN UI
-// -------------------------
-function showLogin() {
-    document.body.innerHTML = `
-        <div style="
-            display:flex;
-            flex-direction:column;
-            justify-content:center;
-            align-items:center;
-            height:100vh;
-            font-family:Arial;
-            background:#0d1117;
-            color:white;
-        ">
-            <h1>🪙 DUCO Dashboard</h1>
-            <input id="username" placeholder="DUCO Username" style="
-                padding:10px;
-                border-radius:8px;
-                border:none;
-                margin-top:20px;
-                width:200px;
-            ">
-            <button onclick="saveUser()" style="
-                margin-top:10px;
-                padding:10px 20px;
-                border:none;
-                border-radius:8px;
-                background:orange;
-                cursor:pointer;
-            ">Start</button>
-        </div>
-    `;
-}
-
-// -------------------------
-// SAVE USER
-// -------------------------
+// ---------------- LOGIN ----------------
 function saveUser() {
-    const user = document.getElementById("username").value.trim();
-    if (!user) return alert("Bitte Username eingeben!");
+    const u = document.getElementById("username").value.trim();
+    if (!u) return;
 
-    localStorage.setItem("duco_user", user);
+    localStorage.setItem("duco_user", u);
     location.reload();
 }
 
-// -------------------------
-// START DASHBOARD
-// -------------------------
-function startDashboard() {
+function getUser() {
+    return localStorage.getItem("duco_user");
+}
+
+// ---------------- START ----------------
+window.addEventListener("load", () => {
+    const user = getUser();
+
+    if (!user) {
+        document.getElementById("login").style.display = "block";
+        document.getElementById("dashboard").style.display = "none";
+        return;
+    }
+
+    document.getElementById("login").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+
+    document.getElementById("donateUser").innerText = user;
+
     initChart();
     fetchData();
     setInterval(fetchData, 5000);
+});
+
+// ---------------- TABS ----------------
+function showTab(tab) {
+    document.querySelectorAll(".tab").forEach(t => t.classList.add("hidden"));
+    document.getElementById(tab).classList.remove("hidden");
 }
 
-// -------------------------
-// CHART
-// -------------------------
-function initChart() {
-    const canvas = document.getElementById("chart");
-    if (!canvas) return;
+// ---------------- CHAT ----------------
+function sendChat() {
+    const input = document.getElementById("chatInput");
+    const msg = input.value;
+    if (!msg) return;
 
-    const ctx = canvas.getContext("2d");
+    const div = document.createElement("div");
+    div.innerText = "💬 " + msg;
+
+    document.getElementById("chatBox").appendChild(div);
+    input.value = "";
+}
+
+// ---------------- DONATE ----------------
+function copyDonate() {
+    const user = getUser();
+    navigator.clipboard.writeText(user);
+    alert("Copied: " + user);
+}
+
+// ---------------- CHART ----------------
+function initChart() {
+    const ctx = document.getElementById("chart").getContext("2d");
 
     chart = new Chart(ctx, {
         type: "line",
@@ -94,89 +72,53 @@ function initChart() {
                 data: [],
                 borderWidth: 2,
                 pointRadius: 0,
-                tension: 0.3,
                 borderColor: "lime"
             }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                x: { display: false }
-            }
         }
     });
 }
 
-// -------------------------
-// API FETCH
-// -------------------------
+// ---------------- DATA ----------------
 async function fetchData() {
-    const user = localStorage.getItem("duco_user");
+    const user = getUser();
     if (!user) return;
 
-    try {
-        const res = await fetch(`https://server.duinocoin.com/users/${user}`);
-        const data = await res.json();
+    const res = await fetch(`https://server.duinocoin.com/users/${user}`);
+    const data = await res.json();
 
-        if (!data.result) return;
+    if (!data.result) return;
 
-        const balance = data.result.balance || 0;
-        const hashrate = data.result.hashrate || 0;
-        const miners = data.result.miners?.length || 0;
+    const balance = data.result.balance || 0;
+    const hashrate = data.result.hashrate || 0;
+    const miners = data.result.miners?.length || 0;
 
-        // fake but stable price (DUCO API ist oft instabil)
-        const priceUSD = 0.0001 + Math.random() * 0.00005;
-        const eurRate = 0.92;
-        const priceEUR = priceUSD * eurRate;
+    const price = 0.0001 + Math.random() * 0.00005;
+    const eur = price * 0.92;
 
-        // UI updates
-        document.getElementById("balance").innerText =
-            balance.toFixed(2) + " DUCO";
+    document.getElementById("balance").innerText = balance;
+    document.getElementById("hashrate").innerText = hashrate;
+    document.getElementById("miners").innerText = miners;
+    document.getElementById("price").innerHTML = `$${price} USD / €${eur}`;
 
-        document.getElementById("hashrate").innerText =
-            hashrate + " H/s";
+    updateChart(price);
 
-        document.getElementById("miners").innerText =
-            miners;
-
-        document.getElementById("price").innerHTML =
-            `$${priceUSD.toFixed(6)} USD<br>€${priceEUR.toFixed(6)} EUR`;
-
-        updateChart(priceUSD);
-
-        document.getElementById("updated").innerText =
-            "Aktualisiert: " + new Date().toLocaleTimeString();
-
-    } catch (e) {
-        console.log("API Fehler:", e);
-    }
+    document.getElementById("updated").innerText =
+        "Updated " + new Date().toLocaleTimeString();
 }
 
-// -------------------------
-// CHART UPDATE
-// -------------------------
-function updateChart(price) {
-    if (!chart) return;
-
+// ---------------- CHART ----------------
+function updateChart(p) {
     const last = history[history.length - 1];
-    history.push(price);
+    history.push(p);
 
     if (history.length > 50) history.shift();
 
     chart.data.labels.push("");
-    chart.data.datasets[0].data.push(price);
+    chart.data.datasets[0].data.push(p);
 
-    if (chart.data.labels.length > 50) {
-        chart.data.labels.shift();
-        chart.data.datasets[0].data.shift();
-    }
-
-    if (last !== undefined) {
+    if (last) {
         chart.data.datasets[0].borderColor =
-            price > last ? "lime" : "red";
+            p > last ? "lime" : "red";
     }
 
     chart.update();
