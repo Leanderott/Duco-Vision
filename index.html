@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUCO Overview</title>
+<title>DUCO Login</title>
 
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -11,74 +11,37 @@
 
 <body>
 
-<!-- LOGIN -->
-<div id="login" class="center">
-    <h1>🪙 DUCO Dashboard</h1>
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-bg">
 
-    <input id="username" placeholder="DUCO Username">
-    <button onclick="saveUser()">Start</button>
+    <div class="login-box">
+        <h1>🪙 DUCO LOGIN</h1>
+
+        <input id="username" placeholder="Duino-Coin Username">
+
+        <button onclick="login()">Bestätigen</button>
+    </div>
+
 </div>
 
 <!-- DASHBOARD -->
-<div id="dashboard" class="tab hidden">
+<div id="app" class="hidden">
 
-    <h1>📊 DUCO Overview</h1>
+    <div class="topbar">
+        <h2>DUCO Dashboard</h2>
+    </div>
 
     <div class="grid">
 
-        <div class="card">
-            💰 Balance
-            <h2 id="balance">-</h2>
-        </div>
-
-        <div class="card">
-            📈 Price
-            <h2 id="price">-</h2>
-        </div>
-
-        <div class="card">
-            ⚡ Hashrate
-            <h2 id="hashrate">-</h2>
-        </div>
-
-        <div class="card">
-            ⛏️ Miners
-            <h2 id="miners">-</h2>
-        </div>
-
-        <div class="card">
-            🔄 Updated
-            <h2 id="updated">-</h2>
-        </div>
+        <div class="card">💰 <div id="balance">-</div></div>
+        <div class="card">📈 <div id="price">-</div></div>
+        <div class="card">⚡ <div id="hashrate">-</div></div>
+        <div class="card">⛏️ <div id="miners">-</div></div>
 
     </div>
 
-    <div class="chartBox">
-        <canvas id="chart"></canvas>
-    </div>
+    <canvas id="chart"></canvas>
 
-</div>
-
-<!-- CHAT TAB -->
-<div id="chat" class="tab hidden">
-    <h2>💬 Chat</h2>
-
-    <div id="chatBox" class="chatBox"></div>
-
-    <input id="chatInput" placeholder="Message...">
-    <button onclick="sendChat()">Send</button>
-</div>
-
-<!-- DONATE TAB -->
-<div id="donate" class="tab hidden">
-    <h2>🎁 Donate DUCO</h2>
-
-    <div class="donateBox">
-        <h3 id="donateUser">-</h3>
-        <p>Send DUCO to this username</p>
-
-        <button onclick="copyDonate()">📋 Copy Username</button>
-    </div>
 </div>
 
 <script src="script.js"></script>
