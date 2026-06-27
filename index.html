@@ -7,14 +7,97 @@
     <link rel="stylesheet" href="style.css">
     <!-- Chart.js for real-time visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Zusatz-Styles für die neuen Features ohne das Hauptdesign zu verändern -->
+    <style>
+        /* Hardware-Liste Style */
+        .hardware-list {
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #888;
+            text-align: left;
+            border-top: 1px solid #222;
+            padding-top: 8px;
+        }
+        .hardware-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+
+        /* Meilenstein Progress Bar Style */
+        .milestone-container {
+            margin-top: 12px;
+            text-align: left;
+        }
+        .milestone-label {
+            font-size: 0.8em;
+            color: #aaa;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .progress-bar-bg {
+            background: #111;
+            border-radius: 10px;
+            height: 8px;
+            width: 100%;
+            overflow: hidden;
+            border: 1px solid #222;
+        }
+        .progress-bar-fill {
+            background: linear-gradient(90deg, #ff6600, #ffaa00);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 8px rgba(255, 102, 0, 0.5);
+        }
+
+        /* Minecraft Achievement Pop-Up Animation */
+        #achievement-popup {
+            position: fixed;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.95);
+            border: 3px solid #ff6600;
+            padding: 15px 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(255, 102, 0, 0.6), inset 0 0 10px rgba(255,255,255,0.05);
+            z-index: 9999;
+            text-align: center;
+            transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            pointer-events: none;
+        }
+        #achievement-popup.show {
+            top: 30px;
+        }
+        #achievement-popup h4 {
+            color: #00ff00;
+            margin: 0 0 5px 0;
+            font-size: 1.2em;
+            text-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
+            letter-spacing: 1px;
+        }
+        #achievement-popup p {
+            color: #fff;
+            margin: 0;
+            font-size: 0.95em;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- OVERLAY LOGIN SCREEN (Always resets on refresh) -->
+    <!-- MINECRAFT ACHIEVEMENT POP-UP -->
+    <div id="achievement-popup">
+        <h4>CHALLENGE COMPLETE! 🏆</h4>
+        <p id="achievement-text">You just reached a new milestone!</p>
+    </div>
+
+    <!-- OVERLAY LOGIN SCREEN -->
     <div id="login-overlay" class="login-container">
         <div class="login-box">
             <div class="duco-logo-bg">
-                <!-- Stabilisierter Logo-Link -->
                 <img src="https://server.duinocoin.com/v3/images/duco.png" alt="Duco Logo">
             </div>
             <h2>DUCO OVERVIEW</h2>
@@ -37,12 +120,14 @@
         </header>
 
         <main class="grid-container">
-            <!-- Card 1: Active Miners -->
+            <!-- Card 1: Active Miners (Mit Hardware-Aufschlüsselung) -->
             <div class="card box-glow">
                 <div class="card-icon">⚡</div>
                 <h3>Active Miners</h3>
                 <p id="miner-count" class="stat-value">0</p>
                 <span class="stat-desc">Working CPUs / Devices</span>
+                <!-- Hier klinkt sich die Hardware-Liste ein -->
+                <div id="hardware-breakdown" class="hardware-list"></div>
             </div>
 
             <!-- Card 2: Cluster Hashrate -->
@@ -53,12 +138,23 @@
                 <span class="stat-desc">Combined cluster mining speed</span>
             </div>
 
-            <!-- Card 3: Account Balance -->
+            <!-- Card 3: Account Balance (Mit Meilenstein-Balken) -->
             <div class="card box-glow">
                 <div class="card-icon">💰</div>
                 <h3>Current Balance</h3>
                 <p id="account-balance" class="stat-value">0.00 <span class="currency">DUCO</span></p>
                 <span class="stat-desc">Your total dynamic wallet balance</span>
+                
+                <!-- Hier klinkt sich der Meilenstein ein -->
+                <div class="milestone-container">
+                    <div class="milestone-label">
+                        <span>Next Milestone:</span>
+                        <span id="next-milestone-val">100 DUCO</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div id="milestone-progress" class="progress-bar-fill"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- Card 4: 24h Estimated Earnings -->
@@ -102,8 +198,7 @@
         <section class="card comment-section box-glow">
             <h3>Global Community Chat</h3>
             <p class="chat-info">Connect with other Duino-Coin miners instantly.</p>
-            <!-- Funktionierender, anmeldefreier Live-Chat für GitHub Pages -->
-            <iframe src="https://www.chatzy.com/embed/46123498172465" width="100%" height="380" allowtransparency="yes" frameborder="0" marginheight="0" marginwidth="0" scrolling="auto"></iframe>
+            <iframe src="https://tlk.io/duco-overview" width="100%" height="380" frameborder="0" style="background: #080808; border-radius: 20px;"></iframe>
         </section>
     </div>
 
