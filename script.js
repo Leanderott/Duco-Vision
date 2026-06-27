@@ -48,6 +48,7 @@ loginBtn.addEventListener('click', () => {
         fetchUserData();
         fetchGlobalMarket();
         
+        // Regelmäßiges Abfragen im Hintergrund alle 10 Sekunden
         setInterval(fetchUserData, 10000);
         setInterval(fetchGlobalMarket, 10000);
     } else {
@@ -198,12 +199,12 @@ function updateChartColor(trend, currentPrice) {
     priceChart.update();
 }
 
-// --- USER DATEN ÜBER SICHREN THINGPROXY (Bypasst GitHub CORS permanent) ---
+// --- DATENABFRAGE ÜBER HOCHSTABILES CORSPROXY.IO RELAY ---
 function fetchUserData() {
-    const targetUrl = `https://server.duinocoin.com/v2/users/${username}`;
+    const rawUrl = `https://server.duinocoin.com/v2/users/${username}`;
     $.ajax({
         method: "GET",
-        url: `https://thingproxy.freeboard.io/fetch/${targetUrl}`,
+        url: `https://corsproxy.io/?${encodeURIComponent(rawUrl)}`,
     })
     .done(function(userData) {
         if (userData && userData.success && userData.result) {
@@ -254,16 +255,15 @@ function fetchUserData() {
         }
     })
     .fail(function(err) {
-        console.error("User Data Sync Error via ThingProxy:", err);
+        console.error("User Data Sync Error via CORSProxy:", err);
     });
 }
 
-// --- MARKT PREIS ÜBER THINGPROXY ---
 function fetchGlobalMarket() {
-    const targetUrl = 'https://server.duinocoin.com/api_context';
+    const rawUrl = 'https://server.duinocoin.com/api_context';
     $.ajax({
         method: "GET",
-        url: `https://thingproxy.freeboard.io/fetch/${targetUrl}`,
+        url: `https://corsproxy.io/?${encodeURIComponent(rawUrl)}`,
     })
     .done(function(apiData) {
         currentPriceUsd = apiData["Duco price"] || 0.00005;
@@ -294,6 +294,6 @@ function fetchGlobalMarket() {
         priceChart.update();
     })
     .fail(function(err) {
-        console.error("Market Data Sync Error via ThingProxy:", err);
+        console.error("Market Data Sync Error via CORSProxy:", err);
     });
 }

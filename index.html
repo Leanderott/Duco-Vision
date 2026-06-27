@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Duco-Overview Dashboard</title>
+    <!-- jQuery für stabiles AJAX -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Chart.js für den Live-Chart -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
@@ -34,19 +36,23 @@
             max-width: 1000px;
         }
 
+        /* Basis-Karte mit permanentem Orangen Leuchten */
         .card {
             background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(255, 102, 0, 0.4);
             border-radius: 16px;
             padding: 24px;
             margin-bottom: 20px;
-            transition: all 0.3s ease;
+            box-shadow: 0 0 25px rgba(255, 102, 0, 0.2);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
         }
 
-        /* JETZT EXTRA FETTER ORANGER GLOW */
-        .box-glow {
-            border-color: rgba(255, 102, 0, 0.6) !important;
-            box-shadow: 0 0 35px rgba(255, 102, 0, 0.45) !important;
+        /* HIER IST DAS AUFPLOPPEN / SKALIEREN BEI MAUS-HOVER */
+        .card:hover {
+            transform: translateY(-5px) scale(1.03);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 40px rgba(255, 102, 0, 0.55);
+            cursor: pointer;
         }
 
         /* Login Overlay */
@@ -65,6 +71,7 @@
             max-width: 400px;
             width: 100%;
         }
+        .login-card:hover { transform: none; cursor: default; } /* Kein Ploppen im Login */
 
         .login-card h2 { color: var(--accent-color); margin-bottom: 8px; }
         .login-card p { color: var(--text-muted); margin-bottom: 24px; }
@@ -154,8 +161,9 @@
 
         .chat-info { color: var(--text-muted); font-size: 14px; margin: -10px 0 15px 0; }
         .comment-section h3 { margin-top: 0; }
+        .comment-section:hover { transform: none; cursor: default; } /* Chat-Box soll beim Hovern ruhig bleiben */
 
-        /* --- MONSTRÖSER, ANIMIERTER RGB REGENBOGEN BUTTON (LEAVE A TIP) --- */
+        /* --- MONSTRÖSER RGB REGENBOGEN SEKTIONS-TRENNER --- */
         @keyframes rgbGlow {
             0% { border-color: #ff0000; box-shadow: 0 0 25px rgba(255, 0, 0, 0.6); }
             33% { border-color: #00ff00; box-shadow: 0 0 25px rgba(0, 255, 0, 0.6); }
@@ -165,38 +173,33 @@
 
         .donation-card {
             text-align: center;
-            margin-top: 30px;
-            margin-bottom: 20px;
+            margin-top: 35px;
+            margin-bottom: 25px;
         }
 
         .rgb-btn {
             background-color: #0a0a0a;
             color: #ffffff;
             border: 4px solid #ff0000;
-            padding: 22px 45px; /* Massiv vergrößert */
-            font-size: 22px; /* Richtig fetter Text */
+            padding: 22px 45px;
+            font-size: 22px;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 1px;
             border-radius: 16px;
-            cursor: pointer;
-            width: 85%; /* Breiter auf der Seite */
-            max-width: 700px;
+            width: 90%;
+            max-width: 750px;
             display: inline-block;
-            animation: rgbGlow 3s infinite linear; /* Schnellerer, dynamischerer Farbwechsel */
-            transition: transform 0.2s, background-color 0.2s;
-        }
-
-        .rgb-btn:hover {
-            transform: scale(1.04);
-            background-color: #141414;
+            animation: rgbGlow 3s infinite linear;
+            cursor: default; /* Keine Hand, da reines Info-Element vor dem Chat */
         }
     </style>
 </head>
 <body>
 
+    <!-- Login Maske -->
     <div id="login-overlay">
-        <div class="card login-card box-glow">
+        <div class="card login-card">
             <h2>DUCO Overview</h2>
             <p>Enter your Duino-Coin username to start monitoring</p>
             <input type="text" id="username-input" placeholder="Duino-Coin Username" autocomplete="off">
@@ -204,33 +207,36 @@
         </div>
     </div>
 
+    <!-- Haupt-Dashboard -->
     <div id="dashboard" class="container hidden">
         <div class="header">
             <h1>Duino-Coin <span id="user-display">@USER</span></h1>
         </div>
 
+        <!-- Reihe 1: Krypto-Stats -->
         <div class="grid">
-            <div class="card stat-card box-glow">
+            <div class="card stat-card">
                 <h3>Account Balance</h3>
                 <div class="value" id="account-balance">0.00 <span class="currency">DUCO</span></div>
             </div>
-            <div class="card stat-card box-glow">
+            <div class="card stat-card">
                 <h3>Active Miners</h3>
                 <div class="value" id="miner-count">0</div>
             </div>
-            <div class="card stat-card box-glow">
+            <div class="card stat-card">
                 <h3>Total Hashrate</h3>
                 <div class="value" id="total-hashrate">0.00 <span class="currency">KH/s</span></div>
             </div>
         </div>
 
+        <!-- Reihe 2: Earnings & Milestones -->
         <div class="grid">
-            <div class="card stat-card box-glow">
+            <div class="card stat-card">
                 <h3>Estimated Daily Earnings</h3>
                 <div class="value" id="estimated-earnings">0.00 <span class="currency">DUCO</span></div>
                 <div id="usd-earnings" style="font-size: 14px; color: #00ff00; margin-top: 4px;">$0.0000 <span class="currency">USD</span></div>
             </div>
-            <div class="card stat-card box-glow" style="grid-column: span 2;">
+            <div class="card stat-card" style="grid-column: span 2;">
                 <h3>Next Milestone Progress</h3>
                 <div class="progress-container">
                     <div id="milestone-progress" class="progress-bar"></div>
@@ -242,14 +248,15 @@
             </div>
         </div>
 
+        <!-- Reihe 3: Hardware & Live Chart -->
         <div class="grid" style="grid-template-columns: 1fr 2fr;">
-            <div class="card box-glow">
+            <div class="card">
                 <h3 style="margin-top:0; font-size:14px; color:var(--text-muted); text-transform:uppercase;">Hardware Breakdown</h3>
                 <div id="hardware-breakdown">
                     <p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>
                 </div>
             </div>
-            <div class="card box-glow">
+            <div class="card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <h3 style="margin:0; font-size:14px; color:var(--text-muted); text-transform:uppercase;">Global Market Price</h3>
                     <div id="trend-indicator" class="trend-neutral">Syncing...</div>
@@ -260,7 +267,13 @@
             </div>
         </div>
 
-        <section class="card comment-section box-glow">
+        <!-- DER MASSIVE RGB TEXT-TRENNER VOR DEM CHAT (OHNE VERLINKUNG) -->
+        <div class="donation-card">
+            <div class="rgb-btn">💸 Leave a Tip / Donations to leanderott</div>
+        </div>
+
+        <!-- Cbox Live-Chat Section -->
+        <section class="card comment-section">
             <h3>Global Community Chat</h3>
             <p class="chat-info">Connect with other Duino-Coin miners instantly.</p>
             <iframe src="https://www5.cbox.ws/box/?boxid=964262&boxtag=dmCmix&sec=main" 
@@ -274,12 +287,9 @@
                     scrolling="auto"
                     style="border-radius: 12px; background: #080808;"></iframe>
         </section>
-
-        <div class="donation-card">
-            <button class="rgb-btn" onclick="window.open('https://server.duinocoin.com/donate.html', '_blank')">💸 Leave a Tip / Donations to leanderott</button>
-        </div>
     </div>
 
+    <!-- Achievement Popup HTML -->
     <div id="achievement-popup">
         <div style="display:flex; align-items:center; gap:12px;">
             <span style="font-size:24px;">🏆</span>
