@@ -1,9 +1,9 @@
-/* Grunddesign & Darkmode */
+/* Deep Cyber Black Theme */
 * {
     margin: 0;
     padding: 0;
-    box-box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
 }
 
 body {
@@ -17,7 +17,7 @@ body {
     display: none !important;
 }
 
-/* LOGIN SCREEN */
+/* --- LOGIN SCREEN (COMPACT & CENTERED) --- */
 .login-container {
     position: fixed;
     top: 0;
@@ -32,86 +32,102 @@ body {
 }
 
 .login-box {
-    background: #0a0a0a;
-    padding: 40px;
-    border-radius: 25px;
+    background: #050505;
+    padding: 40px 30px;
+    border-radius: 30px;
     text-align: center;
-    width: 90%;
-    max-width: 400px;
+    width: 100%;
+    max-width: 360px;
     border: 2px solid #ff6600;
-    box-shadow: 0 0 20px rgba(255, 102, 0, 0.4);
+    box-shadow: 0 0 35px rgba(255, 102, 0, 0.25);
     position: relative;
     overflow: hidden;
+    backdrop-filter: blur(10px);
 }
 
-/* Duino Coin Logo im Hintergrund */
 .duco-logo-bg {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 70%;
-    opacity: 0.15;
+    width: 65%;
+    opacity: 0.08;
     z-index: 0;
     pointer-events: none;
-    filter: drop-shadow(0 0 10px #ff6600);
+    filter: drop-shadow(0 0 20px #ff6600);
 }
 
 .duco-logo-bg img {
     width: 100%;
 }
 
-.login-box h2, .login-box input, .login-box button {
+.login-box h2, .login-box .login-subtitle, .login-box .input-group, .login-box button {
     position: relative;
     z-index: 1;
 }
 
 .login-box h2 {
-    margin-bottom: 25px;
+    letter-spacing: 2px;
     color: #ff6600;
-    font-size: 1.8rem;
+    font-size: 2rem;
+    margin-bottom: 5px;
+    text-shadow: 0 0 10px rgba(255, 102, 0, 0.3);
+}
+
+.login-subtitle {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 25px;
+}
+
+.input-group {
+    width: 80%;
+    margin: 0 auto 20px auto;
 }
 
 .login-box input {
     width: 100%;
-    padding: 12px 20px;
-    background: #111;
-    border: 2px solid #333;
-    border-radius: 15px;
+    padding: 12px 15px;
+    background: #0f0f0f;
+    border: 2px solid #222;
+    border-radius: 18px;
     color: #fff;
     font-size: 1rem;
-    margin-bottom: 20px;
+    text-align: center;
     outline: none;
-    transition: border 0.3s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .login-box input:focus {
     border-color: #ff6600;
+    box-shadow: 0 0 15px rgba(255, 102, 0, 0.3);
+    background: #141414;
 }
 
 .login-box button {
-    width: 100%;
+    width: 80%;
     padding: 12px;
-    background: #ff6600;
+    background: linear-gradient(135deg, #ff6600, #ff4500);
     border: none;
-    border-radius: 15px;
+    border-radius: 18px;
     color: #fff;
-    font-size: 1.1rem;
-    font-weight: bold;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.3s;
+    transition: all 0.3s ease;
 }
 
 .login-box button:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 15px #ff6600;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(255, 102, 0, 0.5);
 }
 
-/* DASHBOARD LAYOUT */
+/* --- DASHBOARD SYSTEM --- */
 .dashboard-layout {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 30px 20px;
+    padding: 40px 20px;
 }
 
 .main-header {
@@ -120,86 +136,186 @@ body {
 }
 
 .main-header h1 {
-    font-size: 2.5rem;
-    color: #fff;
+    font-size: 2.3rem;
+    font-weight: 800;
+    letter-spacing: 1px;
 }
 
 .main-header span {
     color: #ff6600;
+    text-shadow: 0 0 10px rgba(255, 102, 0, 0.3);
 }
 
-/* GRID & RECHTECKE (CARDS) */
+.live-indicator-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #00ff00;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.7);
+    animation: pulse 1.6s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(0, 255, 0, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 0, 0); }
+}
+
+.indicator-text {
+    font-size: 0.8rem;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* --- GRID & CARDS WITH SHARP RADIUS & ORANGE GLOW --- */
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 25px;
-    margin-bottom: 30px;
+    margin-bottom: 35px;
 }
 
-/* Rechtecke mit stark abgerundeten Kanten */
 .card {
-    background-color: #0d0d0d;
-    border: 2px solid #1a1a1a;
-    border-radius: 25px; /* Stark abgerundete Kanten */
+    background: #080808;
+    border: 2px solid #121212;
+    border-radius: 30px;
     padding: 25px;
-    transition: border-color 0.4s ease, box-shadow 0.4s ease, transform 0.3s ease;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-/* Orange leuchtender Hover-Effekt */
+.card-icon {
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+}
+
+.card h3 {
+    font-size: 0.95rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
 .box-glow:hover {
     border-color: #ff6600;
-    box-shadow: 0 0 25px rgba(255, 102, 0, 0.6);
-    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(255, 102, 0, 0.4);
+    transform: translateY(-4px);
+    background: #0c0c0c;
 }
 
 .stat-value {
-    font-size: 2.2rem;
-    font-weight: bold;
-    margin-top: 15px;
-    color: #fff;
+    font-size: 1.9rem;
+    font-weight: 800;
+    margin-top: 10px;
+    color: #ffffff;
+    white-space: nowrap;
 }
 
+.stat-desc {
+    font-size: 0.78rem;
+    color: #444;
+    display: block;
+    margin-top: 5px;
+}
+
+.currency {
+    font-size: 1rem;
+    color: #ff6600;
+}
+
+/* --- GRAPH CARD STYLING --- */
 .chart-card {
     grid-column: 1 / -1;
 }
 
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+#trend-indicator {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.trend-up { background: rgba(0, 255, 0, 0.1); color: #00ff00; border: 1px solid #00ff00; }
+.trend-down { background: rgba(255, 0, 0, 0.1); color: #ff0000; border: 1px solid #ff0000; }
+.trend-neutral { background: rgba(255, 255, 255, 0.05); color: #888; border: 1px solid #333; }
+
 .chart-container {
     position: relative;
-    height: 300px;
+    height: 320px;
     width: 100%;
-    margin-top: 15px;
 }
 
-/* DONATIONS RGB RECHTECK */
+/* --- RGB DONATION SECTION --- */
 .donation-section {
-    background-color: #0d0d0d;
-    padding: 25px;
-    border-radius: 25px;
+    background-color: #050505;
+    padding: 35px 20px;
+    border-radius: 30px;
     text-align: center;
-    margin-bottom: 30px;
-    position: relative;
+    margin-bottom: 35px;
     border: 3px solid transparent;
-    background-clip: padding-box;
 }
 
-/* RGB Rahmen-Animation */
 .rgb-glow {
-    animation: rgbBorder 6s linear infinite;
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+    animation: dynamicRGB 5s linear infinite;
 }
 
-@keyframes rgbBorder {
-    0% { border-color: #ff0000; box-shadow: 0 0 15px rgba(255, 0, 0, 0.4); }
-    33% { border-color: #00ff00; box-shadow: 0 0 15px rgba(0, 255, 0, 0.4); }
-    66% { border-color: #0000ff; box-shadow: 0 0 15px rgba(0, 0, 255, 0.4); }
-    100% { border-color: #ff0000; box-shadow: 0 0 15px rgba(255, 0, 0, 0.4); }
+@keyframes dynamicRGB {
+    0% { border-color: #ff0055; box-shadow: 0 0 20px rgba(255, 0, 85, 0.3); }
+    33% { border-color: #00ffaa; box-shadow: 0 0 20px rgba(0, 255, 170, 0.3); }
+    66% { border-color: #0077ff; box-shadow: 0 0 20px rgba(0, 119, 255, 0.3); }
+    100% { border-color: #ff0055; box-shadow: 0 0 20px rgba(255, 0, 85, 0.3); }
 }
 
 .donation-section h3 {
-    margin-bottom: 10px;
+    color: #fff;
+    font-size: 1.4rem;
+    margin-bottom: 8px;
 }
 
-/* COMMENT SECTION */
-.comment-section {
-    min-height: 200px;
+.donation-section p {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.donation-address {
+    background: #111;
+    display: inline-block;
+    padding: 10px 25px;
+    border-radius: 15px;
+    font-size: 1.1rem;
+    border: 1px solid #222;
+}
+
+.highlight {
+    color: #ff6600;
+    text-shadow: 0 0 8px rgba(255,102,0,0.4);
+}
+
+/* --- COMMENT SECTION OVERHAUL --- */
+.chat-info {
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+iframe {
+    border-radius: 20px;
+    background: #080808;
 }

@@ -1,74 +1,110 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Duco-Overview</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Chart.js for real-time visualization -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
+    <!-- OVERLAY LOGIN SCREEN (Always resets on refresh) -->
     <div id="login-overlay" class="login-container">
         <div class="login-box">
             <div class="duco-logo-bg">
                 <img src="https://raw.githubusercontent.com/revoxhere/duino-coin/master/resources/duco.png" alt="Duco Logo">
             </div>
-            <h2>Duco-Overview Login</h2>
-            <input type="text" id="username-input" placeholder="Duino-Coin Benutzernamen eingeben">
-            <button id="login-btn">Bestätigen</button>
+            <h2>DUCO OVERVIEW</h2>
+            <p class="login-subtitle">Enter your Duino-Coin username to start monitoring</p>
+            <div class="input-group">
+                <input type="text" id="username-input" placeholder="Username" autocomplete="off">
+            </div>
+            <button id="login-btn">CONNECT</button>
         </div>
     </div>
 
+    <!-- MAIN DASHBOARD -->
     <div id="dashboard" class="dashboard-layout hidden">
         <header class="main-header">
-            <h1>Duco-Overview <span id="user-display"></span></h1>
+            <h1>DUCO-OVERVIEW <span id="user-display"></span></h1>
+            <div class="live-indicator-container">
+                <span class="pulse-dot"></span>
+                <span class="indicator-text">Live Sync Active</span>
+            </div>
         </header>
 
         <main class="grid-container">
+            <!-- Card 1: Active Miners -->
             <div class="card box-glow">
-                <h3>Aktive Miner (CPUs)</h3>
+                <div class="card-icon">⚡</div>
+                <h3>Active Miners</h3>
                 <p id="miner-count" class="stat-value">0</p>
+                <span class="stat-desc">Working CPUs / Devices</span>
             </div>
 
+            <!-- Card 2: Cluster Hashrate (NEW FUNCTION) -->
             <div class="card box-glow">
-                <h3>Ertrag (24h Schätzung)</h3>
-                <p id="estimated-earnings" class="stat-value">0.00 DUCO</p>
+                <div class="card-icon">⚙️</div>
+                <h3>Total Hashrate</h3>
+                <p id="total-hashrate" class="stat-value">0.00 <span class="currency">KH/s</span></p>
+                <span class="stat-desc">Combined cluster mining speed</span>
             </div>
 
+            <!-- Card 3: Account Balance (NEW FUNCTION) -->
+            <div class="card box-glow">
+                <div class="card-icon">💰</div>
+                <h3>Current Balance</h3>
+                <p id="account-balance" class="stat-value">0.00 <span class="currency">DUCO</span></p>
+                <span class="stat-desc">Your total dynamic wallet balance</span>
+            </div>
+
+            <!-- Card 4: 24h Estimated Earnings -->
+            <div class="card box-glow">
+                <div class="card-icon">🪙</div>
+                <h3>Estimated Earnings (24h)</h3>
+                <p id="estimated-earnings" class="stat-value">0.00 <span class="currency">DUCO</span></p>
+                <span class="stat-desc">Calculated via current hashrate</span>
+            </div>
+
+            <!-- Card 5: 24h USD Revenue (NEW FUNCTION) -->
+            <div class="card box-glow">
+                <div class="card-icon">💵</div>
+                <h3>Estimated Value (24h)</h3>
+                <p id="usd-earnings" class="stat-value">$0.0000 <span class="currency">USD</span></p>
+                <span class="stat-desc">Expected daily revenue in fiat</span>
+            </div>
+
+            <!-- Card 6: Real-Time USD Price Chart -->
             <div class="card chart-card box-glow">
-                <h3>Duino-Coin Preis (Echtzeit)</h3>
+                <div class="chart-header">
+                    <h3>Global DUCO / USD Market Price</h3>
+                    <span id="trend-indicator" class="trend-neutral">Stable</span>
+                </div>
                 <div class="chart-container">
                     <canvas id="priceChart"></canvas>
                 </div>
             </div>
         </main>
 
+        <!-- Donation Widget with RGB Border -->
         <section class="donation-section rgb-glow">
-            <h3>Unterstütze das Projekt</h3>
-            <p>Spenden-Adresse (DUCO): <strong>Leander</strong> oder <strong>Pirajeen</strong></p>
+            <h3>Support the Project</h3>
+            <p>If you like this overview, consider sending a small tip to the developer!</p>
+            <div class="donation-address">
+                DUCO Address: <strong class="highlight">Leanderott</strong>
+            </div>
         </section>
 
+        <!-- Community Chat Section -->
         <section class="card comment-section box-glow">
-            <h3>Community Chat</h3>
-            <div id="disqus_thread"></div>
+            <h3>Global Community Chat</h3>
+            <p class="chat-info">Connect with other Duino-Coin miners instantly.</p>
+            <iframe src="https://www5.cbox.ws/box/?boxid=953457&boxtag=ducoov" width="100%" height="380" allowtransparency="yes" frameborder="0" marginheight="0" marginwidth="0" scrolling="auto"></iframe>
         </section>
     </div>
 
     <script src="script.js"></script>
-    <script>
-        // Optionales Disqus-Widget für den echten Kommentarbereich ohne Backend.
-        // Ersetze 'dein-disqus-shortname' mit deinem echten Disqus-Namen, falls du einen erstellst.
-        var disqus_config = function () {
-            this.page.url = window.location.href;
-            this.page.identifier = "duco-overview-chat";
-        };
-        (function() {
-            var d = document, s = d.createElement('script');
-            s.src = 'https://dein-disqus-shortname.disqus.com/embed.js';
-            s.setAttribute('data-timestamp', +new Date());
-            (d.head || d.body).appendChild(s);
-        })();
-    </script>
 </body>
 </html>

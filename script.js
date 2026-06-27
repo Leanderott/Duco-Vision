@@ -1,57 +1,76 @@
-// Globale Variablen für User und Chart
+// Force fresh login state on every single site load
+window.onload = function() {
+    document.getElementById('username-input').value = "";
+};
+
 let username = "";
 let priceChart;
 let lastPrice = 0;
 
-// DOM Elemente
+// DOM Selectors
 const loginOverlay = document.getElementById('login-overlay');
 const dashboard = document.getElementById('dashboard');
 const usernameInput = document.getElementById('username-input');
 const loginBtn = document.getElementById('login-btn');
 const userDisplay = document.getElementById('user-display');
+const trendIndicator = document.getElementById('trend-indicator');
 
-// Login Event Listener
+// Event Listener for Login
 loginBtn.addEventListener('click', () => {
     username = usernameInput.value.trim();
     if (username !== "") {
-        userDisplay.textContent = `- ${username}`;
+        userDisplay.textContent = `@${username.toUpperCase()}`;
         loginOverlay.classList.add('hidden');
         dashboard.classList.remove('hidden');
         
-        // Initialisiere Dashboard-Daten
+        // Boot Tracking Engine
         initChart();
-        fetchDucoData();
-        // Daten alle 15 Sekunden neu laden
-        setInterval(fetchDucoData, 15000);
+        fetchDucoSystem();
+        
+        // Fast-paced data pooling (every 8 seconds)
+        setInterval(fetchDucoSystem, 8000);
     } else {
-        alert("Bitte gib einen gültigen Namen ein!");
+        alert("Please enter a valid Duino-Coin username.");
     }
 });
 
-// Chart.js Initialisierung
+// Advanced Chart Setup for Global DUCO to USD Tracking
 function initChart() {
     const ctx = document.getElementById('priceChart').getContext('2d');
     
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(255, 102, 0, 0.15)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
     priceChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: [], // Zeitstempel kommen hier rein
+            labels: [], 
             datasets: [{
-                label: 'DUCO Preis (USD)',
+                label: 'Global Price (USD)',
                 data: [],
-                borderColor: '#ffffff', // Standardfarbe weiß
-                borderWidth: 3,
+                borderColor: '#ff6600', 
+                backgroundColor: gradient,
+                borderWidth: 4,
                 tension: 0.3,
                 pointRadius: 4,
-                fill: false
+                pointBackgroundColor: '#ffffff',
+                fill: true
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                x: { grid: { color: '#222' }, ticks: { color: '#aaa' } },
-                y: { grid: { color: '#222' }, ticks: { color: '#aaa' } }
+                x: { grid: { color: '#111111' }, ticks: { color: '#555' } },
+                y: { 
+                    grid: { color: '#111111' }, 
+                    ticks: { 
+                        color: '#555',
+                        // Format labels precisely for small cryptocurrency values
+                        callback: function(value) { return '$' + value.toFixed(6); }
+                    } 
+                }
             },
             plugins: {
                 legend: { display: false }
@@ -60,60 +79,100 @@ function initChart() {
     });
 }
 
-// Daten von der Duino-Coin API abrufen
-async function fetchDucoData() {
+// Adaptive Color-Shift Logic (Green for Rise, Red for Fall)
+function updateChartColor(trend, currentPrice) {
+    if (!priceChart || !priceChart.data.datasets[0]) return;
+    
+    if (trend === 'up') {
+        priceChart.data.datasets[0].borderColor = '#00ff00'; 
+        trendIndicator.textContent = `Price Rising ▲ ($${currentPrice.toFixed(6)})`;
+        trendIndicator.className = "trend-up";
+    } else if (trend === 'down') {
+        priceChart.data.datasets[0].borderColor = '#ff0000'; 
+        trendIndicator.textContent = `Price Falling ▼ ($${currentPrice.toFixed(6)})`;
+        trendIndicator.className = "trend-down";
+    } else {
+        priceChart.data.datasets[0].borderColor = '#ff6600'; 
+        trendIndicator.textContent = `Stable ($${currentPrice.toFixed(6)})`;
+        trendIndicator.className = "trend-neutral";
+    }
+    priceChart.update();
+}
+
+// Master Async Engine pulling data from both Network and User Nodes
+async function fetchDucoSystem() {
     try {
-        // 1. User Miner Daten abrufen
+        // --- 1. GET USER STATISTICS & LIVE BALANCE ---
         const userResponse = await fetch(`https://server.duinocoin.com/users/${username}`);
         const userData = await userResponse.json();
         
-        if(userData && userData.success) {
-            const miners = userData.result.miners;
-            const minerCount = miners ? miners.length : 0;
-            document.getElementById('miner-count').textContent = minerCount;
+        let calculatedDailyDuco = 0;
+
+        if (userData && userData.success) {
+            // Widget: Active Miners Counter
+            const miners = userData.result.miners || [];
+            document.getElementById('miner-count').textContent = miners.length;
             
-            // Berechnung der voraussichtlichen 24h Einnahmen basierend auf den aktuellen Minern
-            let dailyEstimation = 0;
-            if (miners && miners.length > 0) {
+            // Widget: Live Balance Node (FUNCTION 1)
+            const currentBalance = userData.result.balance.balance || 0;
+            document.getElementById('account-balance').innerHTML = `${currentBalance.toFixed(2)} <span class="currency">DUCO</span>`;
+
+            // Widget: Total Combined Hashrate (FUNCTION 2)
+            let totalHashrate = 0;
+            miners.forEach(miner => {
+                if (miner.hashrate) totalHashrate += miner.hashrate;
+            });
+            // Convert to KH/s for scannability
+            const hashrateKhas = totalHashrate / 1000;
+            document.getElementById('total-hashrate').innerHTML = `${hashrateKhas.toFixed(2)} <span class="currency">KH/s</span>`;
+
+            // Formulate 24h estimation based on system computational metrics
+            if (miners.length > 0) {
                 miners.forEach(miner => {
-                    // Schätzung basierend auf der Hashrate oder Standardwerten der API falls verfügbar
-                    dailyEstimation += (miner.hashrate / 100) * 0.1; // Annäherungswert
+                    if (miner.hashrate) {
+                        calculatedDailyDuco += (miner.hashrate * 0.00864); 
+                    }
                 });
             }
-            document.getElementById('estimated-earnings').textContent = `${dailyEstimation.toFixed(2)} DUCO`;
+            document.getElementById('estimated-earnings').innerHTML = `${calculatedDailyDuco.toFixed(2)} <span class="currency">DUCO</span>`;
         }
 
-        // 2. Globalen API Preis abrufen für das Echtzeit-Diagramm
+        // --- 2. GET GLOBAL MARKET VALUES FOR USD GRAPH & FIAT EVALUATION ---
         const apiResponse = await fetch('https://server.duinocoin.com/api_context');
         const apiData = await apiResponse.json();
         
-        // Preis aus der API extrahieren (Bsp: Duco Preis in USD)
-        const currentPrice = apiData["Duco price"] || 0.00005; 
-        
+        // Safely extract global DUCO to USD price
+        const currentPriceUsd = apiData["Duco price"] || 0.00005;
         const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-        // Update Chart Daten
-        if (priceChart.data.labels.length > 10) {
+        // Widget: Daily Estimated Yield in USD (FUNCTION 3)
+        const dailyUsdValue = calculatedDailyDuco * currentPriceUsd;
+        document.getElementById('usd-earnings').innerHTML = `$${dailyUsdValue.toFixed(4)} <span class="currency">USD</span>`;
+
+        // --- 3. CHART PROCESSING ---
+        if (priceChart.data.labels.length > 15) {
             priceChart.data.labels.shift();
             priceChart.data.datasets[0].data.shift();
         }
 
         priceChart.data.labels.push(currentTime);
-        priceChart.data.datasets[0].data.push(currentPrice);
+        priceChart.data.datasets[0].data.push(currentPriceUsd);
 
-        // Farbänderung Logik: Wenn sinkt ROT, wenn steigt GRÜN
+        // Map trend analysis out onto layout coloration
         if (lastPrice !== 0) {
-            if (currentPrice > lastPrice) {
-                priceChart.data.datasets[0].borderColor = '#00ff00'; // Grün bei Anstieg
-            } else if (currentPrice < lastPrice) {
-                priceChart.data.datasets[0].borderColor = '#ff0000'; // Rot bei Abfall
+            if (currentPriceUsd > lastPrice) {
+                updateChartColor('up', currentPriceUsd);
+            } else if (currentPriceUsd < lastPrice) {
+                updateChartColor('down', currentPriceUsd);
             }
+        } else {
+            updateChartColor('neutral', currentPriceUsd);
         }
         
-        lastPrice = currentPrice;
+        lastPrice = currentPriceUsd;
         priceChart.update();
 
     } catch (error) {
-        console.error("Fehler beim Abrufen der API-Daten:", error);
+        console.error("Dashboard Sync Error:", error);
     }
 }
