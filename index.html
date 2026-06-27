@@ -1,49 +1,74 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUCO Login</title>
-
-<link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duco-Overview</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
 
-<!-- LOGIN SCREEN -->
-<div id="loginScreen" class="login-bg">
-
-    <div class="login-box">
-        <h1>🪙 DUCO LOGIN</h1>
-
-        <input id="username" placeholder="Duino-Coin Username">
-
-        <button onclick="login()">Bestätigen</button>
+    <div id="login-overlay" class="login-container">
+        <div class="login-box">
+            <div class="duco-logo-bg">
+                <img src="https://raw.githubusercontent.com/revoxhere/duino-coin/master/resources/duco.png" alt="Duco Logo">
+            </div>
+            <h2>Duco-Overview Login</h2>
+            <input type="text" id="username-input" placeholder="Duino-Coin Benutzernamen eingeben">
+            <button id="login-btn">Bestätigen</button>
+        </div>
     </div>
 
-</div>
+    <div id="dashboard" class="dashboard-layout hidden">
+        <header class="main-header">
+            <h1>Duco-Overview <span id="user-display"></span></h1>
+        </header>
 
-<!-- DASHBOARD -->
-<div id="app" class="hidden">
+        <main class="grid-container">
+            <div class="card box-glow">
+                <h3>Aktive Miner (CPUs)</h3>
+                <p id="miner-count" class="stat-value">0</p>
+            </div>
 
-    <div class="topbar">
-        <h2>DUCO Dashboard</h2>
+            <div class="card box-glow">
+                <h3>Ertrag (24h Schätzung)</h3>
+                <p id="estimated-earnings" class="stat-value">0.00 DUCO</p>
+            </div>
+
+            <div class="card chart-card box-glow">
+                <h3>Duino-Coin Preis (Echtzeit)</h3>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+        </main>
+
+        <section class="donation-section rgb-glow">
+            <h3>Unterstütze das Projekt</h3>
+            <p>Spenden-Adresse (DUCO): <strong>Leander</strong> oder <strong>Pirajeen</strong></p>
+        </section>
+
+        <section class="card comment-section box-glow">
+            <h3>Community Chat</h3>
+            <div id="disqus_thread"></div>
+        </section>
     </div>
 
-    <div class="grid">
-
-        <div class="card">💰 <div id="balance">-</div></div>
-        <div class="card">📈 <div id="price">-</div></div>
-        <div class="card">⚡ <div id="hashrate">-</div></div>
-        <div class="card">⛏️ <div id="miners">-</div></div>
-
-    </div>
-
-    <canvas id="chart"></canvas>
-
-</div>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Optionales Disqus-Widget für den echten Kommentarbereich ohne Backend.
+        // Ersetze 'dein-disqus-shortname' mit deinem echten Disqus-Namen, falls du einen erstellst.
+        var disqus_config = function () {
+            this.page.url = window.location.href;
+            this.page.identifier = "duco-overview-chat";
+        };
+        (function() {
+            var d = document, s = d.createElement('script');
+            s.src = 'https://dein-disqus-shortname.disqus.com/embed.js';
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+        })();
+    </script>
 </body>
 </html>
