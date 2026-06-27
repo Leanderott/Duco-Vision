@@ -230,12 +230,15 @@ function fetchCombinedData() {
         }
     });
 
-    // 2. Benutzerdaten (Balance + Miner) von der offiziellen User-API
-    $.ajax({
-        url: `https://corsproxy.io/?https://server.duinocoin.com/v3/users/${username}`,
-        method: 'GET',
-        dataType: 'json',
-        success: function(data) {
+    // 2. Benutzerdaten (Balance + Miner) von der offiziellen User-API via CORS-Proxy
+    const apiUrl = `https://server.duinocoin.com/v3/users/${username}`;
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
+
+    fetch(proxyUrl)
+        .then(response => response.json())
+        .then(proxyData => {
+            const data = JSON.parse(proxyData.contents);
+
             if (!data.success) {
                 console.error("User not found:", data.message);
                 return;
@@ -295,9 +298,8 @@ function fetchCombinedData() {
 
             const dailyUsdValue = calculatedDailyDuco * currentPriceUsd;
             document.getElementById('usd-earnings').innerHTML = `$${dailyUsdValue.toFixed(12)} <span class="currency">USD</span>`;
-        },
-        error: function(err) {
+        })
+        .catch(err => {
             console.error("User API failed:", err);
-        }
-    });
+        });
 }
