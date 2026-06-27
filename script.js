@@ -45,13 +45,11 @@ loginBtn.addEventListener('click', () => {
         
         initChart();
         
-        // Sofort abfragen
-        fetchUserData();
-        fetchGlobalMarket();
+        // Sofortige Abfrage
+        fetchCombinedData();
         
-        // Intervalle: Alle 15 Sekunden abfragen, um Server-Ratenbegrenzungen zu vermeiden
-        setInterval(fetchUserData, 15000);
-        setInterval(fetchGlobalMarket, 15000);
+        // Intervall: Alle 20 Sekunden aktualisieren
+        setInterval(fetchCombinedData, 20000);
     } else {
         alert("Please enter a valid Duino-Coin username.");
     }
@@ -200,143 +198,122 @@ function updateChartColor(trend, currentPrice) {
     priceChart.update();
 }
 
-// --- DIREKTE, UNBLOCKBARE USER-DATEN ABFRAGE (CORS-FREI) ---
-function fetchUserData() {
-    // Wir holen die kompletten User-Daten direkt über die offizielle GitHub Pages API von Duino-Coin.
-    // GitHub erlaubt CORS von überall aus – bricht also niemals ab!
+// --- KRISENSICHERE ABFRAGE ÜBER DEN OFFIZIELLEN GITHUB-API-SPIEGEL ---
+function fetchCombinedData() {
+    // GitHub erlaubt CORS nativ – diese Datei wird niemals blockiert!
     $.ajax({
         url: 'https://raw.githubusercontent.com/revoxhere/duino-coin/gh-pages/api.json',
         method: 'GET',
         dataType: 'json',
-        success: function(fullApiData) {
-            if (fullApiData && fullApiData["Users orders"]) {
-                // Suchen nach dem passenden Benutzer in der globalen Liste
-                const allUsers = fullApiData["Users orders"];
-                
-                // Duino-Coin speichert Benutzernamen oft als Keys oder in Sub-Objekten.
-                // Wir holen uns die Daten über die universelle API-Struktur
-                $.getJSON(`https://server.duinocoin.com/v2/users/${username}?callback=?`, function(directData) {
-                    if(directData && directData.success) {
-                        processUserDataStructure(directData.result);
-                    }
-                }).fail(function() {
-                    // Fallback falls der Server komplett blockiert: Dummy/Teildaten aus dem globalen API-State parsen
-                    console.log("Using global API mirror backup for user stats...");
-                });
-            }
-        },
-        error: function() {
-            // Letzte Verteidigungslinie: Direkter JSONP-Call an den Hauptserver
-            $.ajax({
-                url: `https://corsproxy.io/?${encodeURIComponent('https://server.duinocoin.com/v2/users/' + username)}`,
-                method: 'GET',
-                dataType: 'json',
-                success: function(res) {
-                    if (res && res.success) processUserDataStructure(res.result);
-                }
-            });
-        }
-    });
-}
-
-// Separate Hilfsfunktion, die die Boxen mit den echten Werten füttert
-function processUserDataStructure(resultData) {
-    if (!resultData) return;
-    
-    const miners = resultData.miners || [];
-    const currentMinerCount = miners.length;
-    document.getElementById('miner-count').textContent = currentMinerCount;
-    
-    if (lastMinerCount !== -1 && currentMinerCount < lastMinerCount) {
-        playSound('alarm');
-    }
-    lastMinerCount = currentMinerCount;
-
-    const balanceData = resultData.balance || {};
-    const currentBalance = balanceData.balance || 0;
-    document.getElementById('account-balance').innerHTML = `${currentBalance.toFixed(2)} <span class="currency">DUCO</span>`;
-    handleMilestones(currentBalance);
-
-    let totalHashrate = 0;
-    let hardwareCounts = {};
-    calculatedDailyDuco = 0; 
-
-    miners.forEach(miner => {
-        if (miner.hashrate) {
-            totalHashrate += parseFloat(miner.hashrate);
-            // Offizieller Duino-Coin Berechnungs-Schlüssel pro KH/s
-            calculatedDailyDuco += (parseFloat(miner.hashrate) * 0.0072);
-        }
-        let software = miner.software || "Unknown Device";
-        hardwareCounts[software] = (hardwareCounts[software] || 0) + 1;
-    });
-    
-    const hashrateKhas = totalHashrate / 1000;
-    document.getElementById('total-hashrate').innerHTML = `${hashrateKhas.toFixed(2)} <span class="currency">KH/s</span>`;
-    document.getElementById('estimated-earnings').innerHTML = `${calculatedDailyDuco.toFixed(2)} <span class="currency">DUCO</span>`;
-
-    const breakdownContainer = document.getElementById('hardware-breakdown');
-    breakdownContainer.innerHTML = "";
-    for (const [hwName, count] of Object.entries(hardwareCounts)) {
-        breakdownContainer.innerHTML += `
-            <div class="hardware-item">
-                <span>⚙️ ${hwName}:</span>
-                <strong>${count}</strong>
-            </div>
-        `;
-    }
-
-    const dailyUsdValue = calculatedDailyDuco * currentPriceUsd;
-    document.getElementById('usd-earnings').innerHTML = `$${dailyUsdValue.toFixed(12)} <span class="currency">USD</span>`;
-}
-
-// --- MARKT PREIS DIREKT ÜBER DUINO-COIN DUCO-PRICE API ---
-function fetchGlobalMarket() {
-    $.ajax({
-        url: 'https://server.duinocoin.com/api.json',
-        method: 'GET',
-        dataType: 'json',
         success: function(apiData) {
-            processMarketData(apiData);
-        },
-        error: function() {
-            $.ajax({
-                url: 'https://raw.githubusercontent.com/revoxhere/duino-coin/gh-pages/api.json',
-                method: 'GET',
-                dataType: 'json',
-                success: function(apiData) {
-                    processMarketData(apiData);
+            // 1. Marktpreis für den Chart aktualisieren
+            currentPriceUsd = apiData["Duco price"] || 0.00005;
+            const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            if (priceChart.data.labels.length > 15) {
+                priceChart.data.labels.shift();
+                priceChart.data.datasets[0].data.shift();
+            }
+            priceChart.data.labels.push(currentTime);
+            priceChart.data.datasets[0].data.push(currentPriceUsd);
+
+            if (lastPrice !== 0) {
+                if (currentPriceUsd > lastPrice) updateChartColor('up', currentPriceUsd);
+                else if (currentPriceUsd < lastPrice) updateChartColor('down', currentPriceUsd);
+            } else {
+                updateChartColor('neutral', currentPriceUsd);
+            }
+            lastPrice = currentPriceUsd;
+
+            // 2. Benutzer-spezifische Daten aus dem globalen State filtern
+            // Die GitHub-API speichert User-Balances direkt unter "Users" oder "Balances"
+            let userBalance = 0;
+            if (apiData["Balances"] && apiData["Balances"][username]) {
+                userBalance = parseFloat(apiData["Balances"][username]);
+            } else if (apiData["Users orders"] && apiData["Users orders"][username]) {
+                // Manche Versionen nutzen alternative Strukturen
+                userBalance = parseFloat(apiData["Users orders"][username].balance || 0);
+            }
+
+            document.getElementById('account-balance').innerHTML = `${userBalance.toFixed(2)} <span class="currency">DUCO</span>`;
+            handleMilestones(userBalance);
+
+            // 3. Miner-Daten filtern
+            let totalHashrate = 0;
+            let hardwareCounts = {};
+            let currentMinerCount = 0;
+            calculatedDailyDuco = 0;
+
+            // Wir durchsuchen die globale Miner-Liste nach Einträgen des Users
+            if (apiData["Miners"]) {
+                // Falls Miner als Objekt mit User-Keys gespeichert sind
+                if (apiData["Miners"][username]) {
+                    const userMiners = apiData["Miners"][username];
+                    // Wenn es ein Array oder Objekt ist, loopen wir durch
+                    const minerList = Array.isArray(userMiners) ? userMiners : Object.values(userMiners);
+                    
+                    minerList.forEach(miner => {
+                        currentMinerCount++;
+                        if (miner.hashrate) {
+                            totalHashrate += parseFloat(miner.hashrate);
+                            calculatedDailyDuco += (parseFloat(miner.hashrate) * 0.0072);
+                        }
+                        let software = miner.software || "Unknown Device";
+                        hardwareCounts[software] = (hardwareCounts[software] || 0) + 1;
+                    });
+                } else {
+                    // Falls die Miner-Liste flach ist (Array von allen aktiven Minern weltweit)
+                    const allMiners = Array.isArray(apiData["Miners"]) ? apiData["Miners"] : Object.values(apiData["Miners"]);
+                    allMiners.forEach(miner => {
+                        if (miner.user && miner.user.toLowerCase() === username) {
+                            currentMinerCount++;
+                            if (miner.hashrate) {
+                                totalHashrate += parseFloat(miner.hashrate);
+                                calculatedDailyDuco += (parseFloat(miner.hashrate) * 0.0072);
+                            }
+                            let software = miner.software || "Unknown Device";
+                            hardwareCounts[software] = (hardwareCounts[software] || 0) + 1;
+                        }
+                    });
                 }
-            });
+            }
+
+            // Boxen mit den extrahierten Werten befüllen
+            document.getElementById('miner-count').textContent = currentMinerCount;
+            
+            if (lastMinerCount !== -1 && currentMinerCount < lastMinerCount) {
+                playSound('alarm');
+            }
+            lastMinerCount = currentMinerCount;
+
+            const hashrateKhas = totalHashrate / 1000;
+            document.getElementById('total-hashrate').innerHTML = `${hashrateKhas.toFixed(2)} <span class="currency">KH/s</span>`;
+            document.getElementById('estimated-earnings').innerHTML = `${calculatedDailyDuco.toFixed(2)} <span class="currency">DUCO</span>`;
+
+            // Hardware-Liste neu zeichnen
+            const breakdownContainer = document.getElementById('hardware-breakdown');
+            breakdownContainer.innerHTML = "";
+            
+            if (currentMinerCount === 0) {
+                breakdownContainer.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>`;
+            } else {
+                for (const [hwName, count] of Object.entries(hardwareCounts)) {
+                    breakdownContainer.innerHTML += `
+                        <div class="hardware-item">
+                            <span>⚙️ ${hwName}:</span>
+                            <strong>${count}</strong>
+                        </div>
+                    `;
+                }
+            }
+
+            const dailyUsdValue = calculatedDailyDuco * currentPriceUsd;
+            document.getElementById('usd-earnings').innerHTML = `$${dailyUsdValue.toFixed(12)} <span class="currency">USD</span>`;
+            
+            priceChart.update();
+        },
+        error: function(err) {
+            console.error("Critical API Stream sync failed:", err);
         }
     });
-}
-
-function processMarketData(apiData) {
-    currentPriceUsd = apiData["Duco price"] || 0.00005;
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-    const dailyUsdValue = calculatedDailyDuco * currentPriceUsd;
-    document.getElementById('usd-earnings').innerHTML = `$${dailyUsdValue.toFixed(12)} <span class="currency">USD</span>`;
-
-    if (priceChart.data.labels.length > 15) {
-        priceChart.data.labels.shift();
-        priceChart.data.datasets[0].data.shift();
-    }
-
-    priceChart.data.labels.push(currentTime);
-    priceChart.data.datasets[0].data.push(currentPriceUsd);
-
-    if (lastPrice !== 0) {
-        if (currentPriceUsd > lastPrice) {
-            updateChartColor('up', currentPriceUsd);
-        } else if (currentPriceUsd < lastPrice) {
-            updateChartColor('down', currentPriceUsd);
-        }
-    } else {
-        updateChartColor('neutral', currentPriceUsd);
-    }
-    
-    lastPrice = currentPriceUsd;
-    priceChart.update();
 }
