@@ -18,7 +18,6 @@ const loginBtn = document.getElementById('login-btn');
 const userDisplay = document.getElementById('user-display');
 const trendIndicator = document.getElementById('trend-indicator');
 
-// --- SPEICHER-FALLBACK ---
 let memoryStorage = {};
 
 function safeGetItem(key) {
@@ -37,7 +36,6 @@ function safeSetItem(key, value) {
     }
 }
 
-// --- LOGIN EVENT LISTENER ---
 loginBtn.addEventListener('click', () => {
     username = usernameInput.value.trim().toLowerCase(); 
     if (username !== "") {
@@ -47,11 +45,9 @@ loginBtn.addEventListener('click', () => {
         
         initChart();
         
-        // Sofort abfragen
         fetchUserData();
         fetchGlobalMarket();
         
-        // Automatische Updates alle 10 Sekunden
         setInterval(fetchUserData, 10000);
         setInterval(fetchGlobalMarket, 10000);
     } else {
@@ -202,11 +198,12 @@ function updateChartColor(trend, currentPrice) {
     priceChart.update();
 }
 
-// --- USER DATEN DIREKT PER AJAX (Genauso wie im Sinus Monitor) ---
+// --- USER DATEN ÜBER SICHREN THINGPROXY (Bypasst GitHub CORS permanent) ---
 function fetchUserData() {
+    const targetUrl = `https://server.duinocoin.com/v2/users/${username}`;
     $.ajax({
         method: "GET",
-        url: `https://server.duinocoin.com/v2/users/${username}`,
+        url: `https://thingproxy.freeboard.io/fetch/${targetUrl}`,
     })
     .done(function(userData) {
         if (userData && userData.success && userData.result) {
@@ -257,15 +254,16 @@ function fetchUserData() {
         }
     })
     .fail(function(err) {
-        console.error("User Data Sync Error via AJAX:", err);
+        console.error("User Data Sync Error via ThingProxy:", err);
     });
 }
 
-// --- MARKT PREIS DIREKT PER AJAX ---
+// --- MARKT PREIS ÜBER THINGPROXY ---
 function fetchGlobalMarket() {
+    const targetUrl = 'https://server.duinocoin.com/api_context';
     $.ajax({
         method: "GET",
-        url: 'https://server.duinocoin.com/api_context',
+        url: `https://thingproxy.freeboard.io/fetch/${targetUrl}`,
     })
     .done(function(apiData) {
         currentPriceUsd = apiData["Duco price"] || 0.00005;
@@ -296,6 +294,6 @@ function fetchGlobalMarket() {
         priceChart.update();
     })
     .fail(function(err) {
-        console.error("Market Data Sync Error via AJAX:", err);
+        console.error("Market Data Sync Error via ThingProxy:", err);
     });
 }
