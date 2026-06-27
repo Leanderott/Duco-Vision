@@ -37,7 +37,7 @@ function safeSetItem(key, value) {
 }
 
 loginBtn.addEventListener('click', () => {
-    username = usernameInput.value.trim().toLowerCase(); 
+    username = usernameInput.value.trim();
     if (username !== "") {
         userDisplay.textContent = `@${username.toUpperCase()}`;
         loginOverlay.classList.add('hidden');
