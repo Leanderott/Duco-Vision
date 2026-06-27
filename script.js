@@ -7,7 +7,7 @@ let priceChart;
 let lastPrice = 0;
 let lastMinerCount = -1; 
 let calculatedDailyDuco = 0;
-let currentPriceUsd = 0.00005; // Standard-Fallback, falls API träge ist
+let currentPriceUsd = 0.00005; 
 
 const milestones = [1, 100, 500, 1000, 10000, 100000, 1000000, 10000000, 100000000];
 
@@ -18,6 +18,26 @@ const loginBtn = document.getElementById('login-btn');
 const userDisplay = document.getElementById('user-display');
 const trendIndicator = document.getElementById('trend-indicator');
 
+// --- SPEICHER-FALLBACK (Verhindert Abstürze im Incognito-Modus) ---
+let memoryStorage = {};
+
+function safeGetItem(key) {
+    try {
+        return localStorage.getItem(key);
+    } catch (e) {
+        return memoryStorage[key] || null;
+    }
+}
+
+function safeSetItem(key, value) {
+    try {
+        localStorage.setItem(key, value);
+    } catch (e) {
+        memoryStorage[key] = value;
+    }
+}
+
+// --- LOGIN EVENT LISTENER ---
 loginBtn.addEventListener('click', () => {
     username = usernameInput.value.trim().toLowerCase(); 
     if (username !== "") {
@@ -27,11 +47,11 @@ loginBtn.addEventListener('click', () => {
         
         initChart();
         
-        // Beide Systeme sofort und unabhängig voneinander triggern
+        // Sofort abfragen
         fetchUserData();
         fetchGlobalMarket();
         
-        // Alle 10 Sekunden Updates ziehen
+        // Automatische Updates alle 10 Sekunden
         setInterval(fetchUserData, 10000);
         setInterval(fetchGlobalMarket, 10000);
     } else {
@@ -95,13 +115,13 @@ function handleMilestones(currentBalance) {
         }
     }
     
-    let savedMilestone = localStorage.getItem(`duco_milestone_${username}`);
+    let savedMilestone = safeGetItem(`duco_milestone_${username}`);
     if (savedMilestone && parseFloat(savedMilestone) < currentTarget && previousTarget > 0) {
         if (currentBalance >= previousTarget && parseFloat(savedMilestone) < previousTarget) {
             triggerAchievementNotification(previousTarget);
         }
     }
-    localStorage.setItem(`duco_milestone_${username}`, currentTarget);
+    safeSetItem(`duco_milestone_${username}`, currentTarget);
 
     document.getElementById('next-milestone-val').textContent = `${currentTarget.toLocaleString()} DUCO`;
     let range = currentTarget - previousTarget;
@@ -182,11 +202,13 @@ function updateChartColor(trend, currentPrice) {
     priceChart.update();
 }
 
-// --- SEPARATE ABFRAGE 1: USER DATEN (Läuft völlig unabhängig) ---
+// --- USER DATEN ÜBER PROXY ABFRAGEN ---
 async function fetchUserData() {
     try {
-        const userResponse = await fetch(`https://server.duinocoin.com/v2/users/${username}`);
-        const userData = await userResponse.json();
+        const targetUrl = `https://server.duinocoin.com/v2/users/${username}`;
+        const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
+        const proxyData = await response.json();
+        const userData = JSON.parse(proxyData.contents);
         
         if (userData && userData.success && userData.result) {
             const miners = userData.result.miners || [];
@@ -205,7 +227,7 @@ async function fetchUserData() {
 
             let totalHashrate = 0;
             let hardwareCounts = {};
-            calculatedDailyDuco = 0; // Reset für Neuberechnung
+            calculatedDailyDuco = 0; 
 
             miners.forEach(miner => {
                 if (miner.hashrate) {
@@ -231,7 +253,6 @@ async function fetchUserData() {
                 `;
             }
 
-            // Direkt USD updaten, falls Marktpreis schon da ist
             const dailyUsdValue = calculatedDailyDuco * currentPriceUsd;
             document.getElementById('usd-earnings').innerHTML = `$${dailyUsdValue.toFixed(4)} <span class="currency">USD</span>`;
         }
@@ -240,11 +261,13 @@ async function fetchUserData() {
     }
 }
 
-// --- SEPARATE ABFRAGE 2: MARKT PREIS & GRAPH ---
+// --- MARKT PREIS ÜBER PROXY ABFRAGEN ---
 async function fetchGlobalMarket() {
     try {
-        const apiResponse = await fetch('https://server.duinocoin.com/api_context');
-        const apiData = await apiResponse.json();
+        const targetUrl = 'https://server.duinocoin.com/api_context';
+        const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
+        const proxyData = await response.json();
+        const apiData = JSON.parse(proxyData.contents);
         
         currentPriceUsd = apiData["Duco price"] || 0.00005;
         const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
