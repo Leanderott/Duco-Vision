@@ -45,10 +45,11 @@ loginBtn.addEventListener('click', () => {
         
         initChart();
         
+        // Sofort beim Login Daten abrufen
         fetchUserData();
         fetchGlobalMarket();
         
-        // Regelmäßiges Abfragen im Hintergrund alle 10 Sekunden
+        // Regelmäßiges Abfragen alle 10 Sekunden
         setInterval(fetchUserData, 10000);
         setInterval(fetchGlobalMarket, 10000);
     } else {
@@ -199,7 +200,7 @@ function updateChartColor(trend, currentPrice) {
     priceChart.update();
 }
 
-// --- DATENABFRAGE ÜBER HOCHSTABILES CORSPROXY.IO RELAY ---
+// --- USER DATEN ABFRAGEN ---
 function fetchUserData() {
     const rawUrl = `https://server.duinocoin.com/v2/users/${username}`;
     $.ajax({
@@ -259,13 +260,16 @@ function fetchUserData() {
     });
 }
 
+// --- MARKT PREIS ABFRAGEN (KORRIGIERTER ENDPUNKT) ---
 function fetchGlobalMarket() {
-    const rawUrl = 'https://server.duinocoin.com/api_context';
+    // Hier lag der Fehler: api.json ist die richtige Datei auf dem Server!
+    const rawUrl = 'https://server.duinocoin.com/api.json';
     $.ajax({
         method: "GET",
         url: `https://corsproxy.io/?${encodeURIComponent(rawUrl)}`,
     })
     .done(function(apiData) {
+        // Auslesen des Preises aus der offiziellen Struktur von api.json
         currentPriceUsd = apiData["Duco price"] || 0.00005;
         const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
