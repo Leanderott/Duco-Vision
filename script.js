@@ -49,7 +49,7 @@ loginBtn.addEventListener('click', () => {
         fetchUserData();
         fetchGlobalMarket();
         
-        // Intervalle: Alle 10 Sekunden
+        // Intervalle: Alle 10 Sekunden abfragen
         setInterval(fetchUserData, 10000);
         setInterval(fetchGlobalMarket, 10000);
     } else {
@@ -162,7 +162,7 @@ function initChart() {
                     grid: { color: '#111111' }, 
                     ticks: { 
                         color: '#555',
-                        // Auf 12 Nachkommastellen erweitert
+                        // Achsenskalierung des Diagramms auf 12 Nachkommastellen erweitert
                         callback: function(value) { return '$' + value.toFixed(12); }
                     } 
                 }
@@ -177,7 +177,7 @@ function updateChartColor(trend, currentPrice) {
     const ctx = document.getElementById('priceChart').getContext('2d');
     let newGradient = ctx.createLinearGradient(0, 0, 0, 300);
     
-    // Trend-Anzeigen ebenfalls auf 12 Nachkommastellen formatiert
+    // Trend-Statusanzeige ebenfalls auf 12 Nachkommastellen formatiert
     if (trend === 'up') {
         priceChart.data.datasets[0].borderColor = '#00ff00'; 
         newGradient.addColorStop(0, 'rgba(0, 255, 0, 0.2)');
@@ -202,11 +202,12 @@ function updateChartColor(trend, currentPrice) {
     priceChart.update();
 }
 
-// --- USER DATEN ÜBER UNBLOCKBAREN ALLORIGINS PROXY ---
+// --- USER DATEN ÜBER UNBLOCKBAREN JSONP PROXY ---
 function fetchUserData() {
     const rawUrl = `https://server.duinocoin.com/v2/users/${username}`;
     
-    $.getJSON(`https://api.allorigins.win/get?url=${encodeURIComponent(rawUrl)}`, function(data) {
+    // callback=? zwingt jQuery in den JSONP-Modus (umgeht CORS komplett)
+    $.getJSON(`https://api.allorigins.win/get?url=${encodeURIComponent(rawUrl)}&callback=?`, function(data) {
         const userData = JSON.parse(data.contents);
         
         if (userData && userData.success && userData.result) {
@@ -260,11 +261,12 @@ function fetchUserData() {
     });
 }
 
-// --- MARKT PREIS ÜBER UNBLOCKBAREN ALLORIGINS PROXY ---
+// --- MARKT PREIS ÜBER UNBLOCKBAREN JSONP PROXY ---
 function fetchGlobalMarket() {
     const rawUrl = 'https://server.duinocoin.com/api.json';
     
-    $.getJSON(`https://api.allorigins.win/get?url=${encodeURIComponent(rawUrl)}`, function(data) {
+    // callback=? zwingt jQuery in den JSONP-Modus (umgeht CORS komplett)
+    $.getJSON(`https://api.allorigins.win/get?url=${encodeURIComponent(rawUrl)}&callback=?`, function(data) {
         const apiData = JSON.parse(data.contents);
         
         currentPriceUsd = apiData["Duco price"] || 0.00005;

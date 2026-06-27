@@ -85,6 +85,93 @@
             color: #fff;
             font-size: 16px;
             box-sizing: border-box;
+            margin-bottom: 16px;<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duco-Overview Dashboard</title>
+    <!-- jQuery für stabiles AJAX -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Chart.js für den Live-Chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: #0c0c0c;
+            --accent-color: #ff6600;
+            --text-color: #ffffff;
+            --text-muted: #888888;
+            --border-color: #1a1a1a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        /* Basis-Karte mit permanentem Orangen Leuchten */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(255, 102, 0, 0.4);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 25px rgba(255, 102, 0, 0.2);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Hover-Effekt: Groß-Ploppen */
+        .card:hover {
+            transform: translateY(-5px) scale(1.03);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 40px rgba(255, 102, 0, 0.55);
+            cursor: pointer;
+        }
+
+        /* Login Overlay */
+        #login-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-card {
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        .login-card:hover { transform: none; cursor: default; }
+
+        .login-card h2 { color: var(--accent-color); margin-bottom: 8px; }
+        .login-card p { color: var(--text-muted); margin-bottom: 24px; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: #121212;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            box-sizing: border-box;
             margin-bottom: 16px;
             text-align: center;
         }
@@ -197,7 +284,7 @@
 </head>
 <body>
 
-    <!-- Login Maske (Behebt die Label-Warnung in der Konsole) -->
+    <!-- Login Maske -->
     <div id="login-overlay">
         <div class="card login-card">
             <h2>DUCO Overview</h2>
@@ -268,7 +355,826 @@
             </div>
         </div>
 
-        <!-- RGB TEXT-TRENNER VOR DEM CHAT (REINES DESIGN) -->
+        <!-- Sektions-Trenner -->
+        <div class="donation-card">
+            <div class="rgb-btn">💸 Leave a Tip / Donations to leanderott</div>
+        </div>
+
+        <!-- Cbox Live-Chat Section -->
+        <section class="card comment-section">
+            <h3>Global Community Chat</h3>
+            <p class="chat-info">Connect with other Duino-Coin miners instantly.</p>
+            <iframe src="https://www5.cbox.ws/box/?boxid=964262&boxtag=dmCmix&sec=main" 
+                    width="100%" 
+                    height="450" 
+                    allowtransparency="yes" 
+                    allow="autoplay" 
+                    frameborder="0" 
+                    marginheight="0" 
+                    marginwidth="0" 
+                    scrolling="auto"
+                    style="border-radius: 12px; background: #080808;"></iframe>
+        </section>
+    </div>
+
+    <!-- Achievement Popup HTML -->
+    <div id="achievement-popup">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:24px;">🏆</span>
+            <span id="achievement-text" style="font-size:14px; color:#fff;">Milestone unlocked!</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+            text-align: center;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 15px rgba(255, 102, 0, 0.7);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover { background-color: #e05500; }
+        .hidden { display: none !important; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 { margin: 0; font-size: 24px; }
+        #user-display { color: var(--accent-color); font-weight: bold; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card h3 { margin: 0 0 8px 0; font-size: 14px; color: var(--text-muted); text-transform: uppercase; }
+        .stat-card .value { font-size: 28px; font-weight: bold; margin-bottom: 4px; }
+        .currency { font-size: 14px; color: var(--text-muted); font-weight: normal; }
+
+        /* Progress Bar */
+        .progress-container { background: #121212; border-radius: 8px; height: 8px; width: 100%; overflow: hidden; margin-top: 8px; }
+        .progress-bar { background: var(--accent-color); height: 100%; width: 0%; transition: width 0.5s ease; box-shadow: 0 0 8px var(--accent-color); }
+        .milestone-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+        /* Hardware Breakdown */
+        #hardware-breakdown { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .hardware-item { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; border-bottom: 1px solid #111; }
+
+        /* Chart & Trend */
+        .chart-container { height: 300px; position: relative; margin-top: 16px; }
+        #trend-indicator { font-size: 14px; font-weight: bold; margin-top: 8px; }
+        .trend-neutral { color: var(--ac<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duco-Overview Dashboard</title>
+    <!-- jQuery für stabiles AJAX -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Chart.js für den Live-Chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: #0c0c0c;
+            --accent-color: #ff6600;
+            --text-color: #ffffff;
+            --text-muted: #888888;
+            --border-color: #1a1a1a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        /* Basis-Karte mit permanentem Orangen Leuchten */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(255, 102, 0, 0.4);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 25px rgba(255, 102, 0, 0.2);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Hover-Effekt: Groß-Ploppen */
+        .card:hover {
+            transform: translateY(-5px) scale(1.03);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 40px rgba(255, 102, 0, 0.55);
+            cursor: pointer;
+        }
+
+        /* Login Overlay */
+        #login-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-card {
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        .login-card:hover { transform: none; cursor: default; }
+
+        .login-card h2 { color: var(--accent-color); margin-bottom: 8px; }
+        .login-card p { color: var(--text-muted); margin-bottom: 24px; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: #121212;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            box-sizing: border-box;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 15px rgba(255, 102, 0, 0.7);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover { background-color: #e05500; }
+        .hidden { display: none !important; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 { margin: 0; font-size: 24px; }
+        #user-display { color: var(--accent-color); font-weight: bold; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card h3 { margin: 0 0 8px 0; font-size: 14px; color: var(--text-muted); text-transform: uppercase; }
+        .stat-card .value { font-size: 28px; font-weight: bold; margin-bottom: 4px; }
+        .currency { font-size: 14px; color: var(--text-muted); font-weight: normal; }
+
+        /* Progress Bar */
+        .progress-container { background: #121212; border-radius: 8px; height: 8px; width: 100%; overflow: hidden; margin-top: 8px; }
+        .progress-bar { background: var(--accent-color); height: 100%; width: 0%; transition: width 0.5s ease; box-shadow: 0 0 8px var(--accent-color); }
+        .milestone-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+        /* Hardware Breakdown */
+        #hardware-breakdown { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .hardware-item { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; border-bottom: 1px solid #111; }
+
+        /* Chart & Trend */
+        .chart-container { height: 300px; position: relative; margin-top: 16px; }
+        #trend-indicator { font-size: 14px; font-weight: bold; margin-top: 8px; }
+        .trend-neutral { color: var(--accent-color); }
+        .trend-up { color: #00ff00; }
+        .trend-down { color: #ff0000; }
+
+        /* Achievement Popup */
+        #achievement-popup {
+            position: fixed;
+            bottom: -100px; left: 50%; transform: translateX(-50%);
+            background: #111; border: 2px solid var(--accent-color);
+            padding: 16px 24px; border-radius: 12px; z-index: 2000;
+            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 30px rgba(255,102,0,0.4); pointer-events: none;
+        }
+        #achievement-popup.show { bottom: 30px; }
+
+        .chat-info { color: var(--text-muted); font-size: 14px; margin: -10px 0 15px 0; }
+        .comment-section h3 { margin-top: 0; }
+        .comment-section:hover { transform: none; cursor: default; }
+
+        /* RGB Sektions-Trenner */
+        @keyframes rgbGlow {
+            0% { border-color: #ff0000; box-shadow: 0 0 25px rgba(255, 0, 0, 0.6); }
+            33% { border-color: #00ff00; box-shadow: 0 0 25px rgba(0, 255, 0, 0.6); }
+            66% { border-color: #0000ff; box-shadow: 0 0 25px rgba(0, 0, 255, 0.6); }
+            100% { border-color: #ff0000; box-shadow: 0 0 25px rgba(255, 0, 0, 0.6); }
+        }
+
+        .donation-card {
+            text-align: center;
+            margin-top: 35px;
+            margin-bottom: 25px;
+        }
+
+        .rgb-btn {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            border: 4px solid #ff0000;
+            padding: 22px 45px;
+            font-size: 22px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 750px;
+            display: inline-block;
+            animation: rgbGlow 3s infinite linear;
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Maske -->
+    <div id="login-overlay">
+        <div class="card login-card">
+            <h2>DUCO Overview</h2>
+            <p>Enter your Duino-Coin username to start monitoring</p>
+            <label for="username-input" class="hidden">Username Input</label>
+            <input type="text" id="username-input" placeholder="Duino-Coin Username" autocomplete="off">
+            <button id="login-btn">Launch Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Haupt-Dashboard -->
+    <div id="dashboard" class="container hidden">
+        <div class="header">
+            <h1>Duino-Coin <span id="user-display">@USER</span></h1>
+        </div>
+
+        <!-- Reihe 1: Krypto-Stats -->
+        <div class="grid">
+            <div class="card stat-card">
+                <h3>Account Balance</h3>
+                <div class="value" id="account-balance">0.00 <span class="currency">DUCO</span></div>
+            </div>
+            <div class="card stat-card">
+                <h3>Active Miners</h3>
+                <div class="value" id="miner-count">0</div>
+            </div>
+            <div class="card stat-card">
+                <h3>Total Hashrate</h3>
+                <div class="value" id="total-hashrate">0.00 <span class="currency">KH/s</span></div>
+            </div>
+        </div>
+
+        <!-- Reihe 2: Earnings & Milestones -->
+        <div class="grid">
+            <div class="card stat-card">
+                <h3>Estimated Daily Earnings</h3>
+                <div class="value" id="estimated-earnings">0.00 <span class="currency">DUCO</span></div>
+                <div id="usd-earnings" style="font-size: 14px; color: #00ff00; margin-top: 4px;">$0.0000 <span class="currency">USD</span></div>
+            </div>
+            <div class="card stat-card" style="grid-column: span 2;">
+                <h3>Next Milestone Progress</h3>
+                <div class="progress-container">
+                    <div id="milestone-progress" class="progress-bar"></div>
+                </div>
+                <div class="milestone-info">
+                    <span>Progress</span>
+                    <span id="next-milestone-val">100 DUCO</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reihe 3: Hardware & Live Chart -->
+        <div class="grid" style="grid-template-columns: 1fr 2fr;">
+            <div class="card">
+                <h3 style="margin-top:0; font-size:14px; color:var(--text-muted); text-transform:uppercase;">Hardware Breakdown</h3>
+                <div id="hardware-breakdown">
+                    <p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>
+                </div>
+            </div>
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="margin:0; font-size:14px; color:var(--text-muted); text-transform:uppercase;">Global Market Price</h3>
+                    <div id="trend-indicator" class="trend-neutral">Syncing...</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sektions-Trenner -->
+        <div class="donation-card">
+            <div class="rgb-btn">💸 Leave a Tip / Donations to leanderott</div>
+        </div>
+
+        <!-- Cbox Live-Chat Section -->
+        <section class="card comment-section">
+            <h3>Global Community Chat</h3>
+            <p class="chat-info">Connect with other Duino-Coin miners instantly.</p>
+            <iframe src="https://www5.cbox.ws/box/?boxid=964262&boxtag=dmCmix&sec=main" 
+                    width="100%" 
+                    height="450" 
+                    allowtransparency="yes" 
+                    allow="autoplay" 
+                    frameborder="0" 
+                    marginheight="0" 
+                    marginwidth="0" 
+                    scrolling="auto"
+                    style="border-radius: 12px; background: #080808;"></iframe>
+        </section>
+    </div>
+
+    <!-- Achievement Popup HTML -->
+    <div id="achievement-popup">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:24px;">🏆</span>
+            <span id="achievement-text" style="font-size:14px; color:#fff;">Milestone unlocked!</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>cent-color); }
+        .trend-up { color: #00ff00; }
+        .trend-down { color: #ff0000; }
+
+        /* Achievement Popup */
+        #achievement-popup {
+            position: fixed;
+            bottom: -100px; left: 50%; transform: translateX(-50%);
+            background: #111; border: 2px solid var(--accent-color);
+            padding: 16px 24px; border-radius: 12px; z-index: 2000;
+            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 30px rgba(255,102,0,0.4); pointer-events: none;
+        }
+        #achievement-popup.show { bottom: 30px; }
+
+        .chat-info { color: var(--text-muted); font-size: 14px; margin: -10px 0 15px 0; }
+        .comment-section h3 { margin-top: 0; }
+        .comment-section:hover { transform: none; cursor: default; }
+
+        /* RGB Sektions-Trenner */<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duco-Overview Dashboard</title>
+    <!-- jQuery für stabiles AJAX -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Chart.js für den Live-Chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: #0c0c0c;
+            --accent-color: #ff6600;
+            --text-color: #ffffff;
+            --text-muted: #888888;
+            --border-color: #1a1a1a;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        /* Basis-Karte mit permanentem Orangen Leuchten */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(255, 102, 0, 0.4);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 25px rgba(255, 102, 0, 0.2);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Hover-Effekt: Groß-Ploppen */
+        .card:hover {
+            transform: translateY(-5px) scale(1.03);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 40px rgba(255, 102, 0, 0.55);
+            cursor: pointer;
+        }
+
+        /* Login Overlay */
+        #login-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-card {
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        .login-card:hover { transform: none; cursor: default; }
+
+        .login-card h2 { color: var(--accent-color); margin-bottom: 8px; }
+        .login-card p { color: var(--text-muted); margin-bottom: 24px; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: #121212;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            box-sizing: border-box;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 15px rgba(255, 102, 0, 0.7);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover { background-color: #e05500; }
+        .hidden { display: none !important; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 { margin: 0; font-size: 24px; }
+        #user-display { color: var(--accent-color); font-weight: bold; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card h3 { margin: 0 0 8px 0; font-size: 14px; color: var(--text-muted); text-transform: uppercase; }
+        .stat-card .value { font-size: 28px; font-weight: bold; margin-bottom: 4px; }
+        .currency { font-size: 14px; color: var(--text-muted); font-weight: normal; }
+
+        /* Progress Bar */
+        .progress-container { background: #121212; border-radius: 8px; height: 8px; width: 100%; overflow: hidden; margin-top: 8px; }
+        .progress-bar { background: var(--accent-color); height: 100%; width: 0%; transition: width 0.5s ease; box-shadow: 0 0 8px var(--accent-color); }
+        .milestone-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+        /* Hardware Breakdown */
+        #hardware-breakdown { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .hardware-item { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; border-bottom: 1px solid #111; }
+
+        /* Chart & Trend */
+        .chart-container { height: 300px; position: relative; margin-top: 16px; }
+        #trend-indicator { font-size: 14px; font-weight: bold; margin-top: 8px; }
+        .trend-neutral { color: var(--accent-color); }
+        .trend-up { color: #00ff00; }
+        .trend-down { color: #ff0000; }
+
+        /* Achievement Popup */
+        #achievement-popup {
+            position: fixed;
+            bottom: -100px; left: 50%; transform: translateX(-50%);
+            background: #111; border: 2px solid var(--accent-color);
+            padding: 16px 24px; border-radius: 12px; z-index: 2000;
+            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 30px rgba(255,102,0,0.4); pointer-events: none;
+        }
+        #achievement-popup.show { bottom: 30px; }
+
+        .chat-info { color: var(--text-muted); font-size: 14px; margin: -10px 0 15px 0; }
+        .comment-section h3 { margin-top: 0; }
+        .comment-section:hover { transform: none; cursor: default; }
+
+        /* RGB Sektions-Trenner */
+        @keyframes rgbGlow {
+            0% { border-color: #ff0000; box-shadow: 0 0 25px rgba(255, 0, 0, 0.6); }
+            33% { border-color: #00ff00; box-shadow: 0 0 25px rgba(0, 255, 0, 0.6); }
+            66% { border-color: #0000ff; box-shadow: 0 0 25px rgba(0, 0, 255, 0.6); }
+            100% { border-color: #ff0000; box-shadow: 0 0 25px rgba(255, 0, 0, 0.6); }
+        }
+
+        .donation-card {
+            text-align: center;
+            margin-top: 35px;
+            margin-bottom: 25px;
+        }
+
+        .rgb-btn {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            border: 4px solid #ff0000;
+            padding: 22px 45px;
+            font-size: 22px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 750px;
+            display: inline-block;
+            animation: rgbGlow 3s infinite linear;
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Maske -->
+    <div id="login-overlay">
+        <div class="card login-card">
+            <h2>DUCO Overview</h2>
+            <p>Enter your Duino-Coin username to start monitoring</p>
+            <label for="username-input" class="hidden">Username Input</label>
+            <input type="text" id="username-input" placeholder="Duino-Coin Username" autocomplete="off">
+            <button id="login-btn">Launch Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Haupt-Dashboard -->
+    <div id="dashboard" class="container hidden">
+        <div class="header">
+            <h1>Duino-Coin <span id="user-display">@USER</span></h1>
+        </div>
+
+        <!-- Reihe 1: Krypto-Stats -->
+        <div class="grid">
+            <div class="card stat-card">
+                <h3>Account Balance</h3>
+                <div class="value" id="account-balance">0.00 <span class="currency">DUCO</span></div>
+            </div>
+            <div class="card stat-card">
+                <h3>Active Miners</h3>
+                <div class="value" id="miner-count">0</div>
+            </div>
+            <div class="card stat-card">
+                <h3>Total Hashrate</h3>
+                <div class="value" id="total-hashrate">0.00 <span class="currency">KH/s</span></div>
+            </div>
+        </div>
+
+        <!-- Reihe 2: Earnings & Milestones -->
+        <div class="grid">
+            <div class="card stat-card">
+                <h3>Estimated Daily Earnings</h3>
+                <div class="value" id="estimated-earnings">0.00 <span class="currency">DUCO</span></div>
+                <div id="usd-earnings" style="font-size: 14px; color: #00ff00; margin-top: 4px;">$0.0000 <span class="currency">USD</span></div>
+            </div>
+            <div class="card stat-card" style="grid-column: span 2;">
+                <h3>Next Milestone Progress</h3>
+                <div class="progress-container">
+                    <div id="milestone-progress" class="progress-bar"></div>
+                </div>
+                <div class="milestone-info">
+                    <span>Progress</span>
+                    <span id="next-milestone-val">100 DUCO</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reihe 3: Hardware & Live Chart -->
+        <div class="grid" style="grid-template-columns: 1fr 2fr;">
+            <div class="card">
+                <h3 style="margin-top:0; font-size:14px; color:var(--text-muted); text-transform:uppercase;">Hardware Breakdown</h3>
+                <div id="hardware-breakdown">
+                    <p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>
+                </div>
+            </div>
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="margin:0; font-size:14px; color:var(--text-muted); text-transform:uppercase;">Global Market Price</h3>
+                    <div id="trend-indicator" class="trend-neutral">Syncing...</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sektions-Trenner -->
+        <div class="donation-card">
+            <div class="rgb-btn">💸 Leave a Tip / Donations to leanderott</div>
+        </div>
+
+        <!-- Cbox Live-Chat Section -->
+        <section class="card comment-section">
+            <h3>Global Community Chat</h3>
+            <p class="chat-info">Connect with other Duino-Coin miners instantly.</p>
+            <iframe src="https://www5.cbox.ws/box/?boxid=964262&boxtag=dmCmix&sec=main" 
+                    width="100%" 
+                    height="450" 
+                    allowtransparency="yes" 
+                    allow="autoplay" 
+                    frameborder="0" 
+                    marginheight="0" 
+                    marginwidth="0" 
+                    scrolling="auto"
+                    style="border-radius: 12px; background: #080808;"></iframe>
+        </section>
+    </div>
+
+    <!-- Achievement Popup HTML -->
+    <div id="achievement-popup">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:24px;">🏆</span>
+            <span id="achievement-text" style="font-size:14px; color:#fff;">Milestone unlocked!</span>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+        @keyframes rgbGlow {
+            0% { border-color: #ff0000; box-shadow: 0 0 25px rgba(255, 0, 0, 0.6); }
+            33% { border-color: #00ff00; box-shadow: 0 0 25px rgba(0, 255, 0, 0.6); }
+            66% { border-color: #0000ff; box-shadow: 0 0 25px rgba(0, 0, 255, 0.6); }
+            100% { border-color: #ff0000; box-shadow: 0 0 25px rgba(255, 0, 0, 0.6); }
+        }
+
+        .donation-card {
+            text-align: center;
+            margin-top: 35px;
+            margin-bottom: 25px;
+        }
+
+        .rgb-btn {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            border: 4px solid #ff0000;
+            padding: 22px 45px;
+            font-size: 22px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 750px;
+            display: inline-block;
+            animation: rgbGlow 3s infinite linear;
+            cursor: default;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Maske -->
+    <div id="login-overlay">
+        <div class="card login-card">
+            <h2>DUCO Overview</h2>
+            <p>Enter your Duino-Coin username to start monitoring</p>
+            <label for="username-input" class="hidden">Username Input</label>
+            <input type="text" id="username-input" placeholder="Duino-Coin Username" autocomplete="off">
+            <button id="login-btn">Launch Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Haupt-Dashboard -->
+    <div id="dashboard" class="container hidden">
+        <div class="header">
+            <h1>Duino-Coin <span id="user-display">@USER</span></h1>
+        </div>
+
+        <!-- Reihe 1: Krypto-Stats -->
+        <div class="grid">
+            <div class="card stat-card">
+                <h3>Account Balance</h3>
+                <div class="value" id="account-balance">0.00 <span class="currency">DUCO</span></div>
+            </div>
+            <div class="card stat-card">
+                <h3>Active Miners</h3>
+                <div class="value" id="miner-count">0</div>
+            </div>
+            <div class="card stat-card">
+                <h3>Total Hashrate</h3>
+                <div class="value" id="total-hashrate">0.00 <span class="currency">KH/s</span></div>
+            </div>
+        </div>
+
+        <!-- Reihe 2: Earnings & Milestones -->
+        <div class="grid">
+            <div class="card stat-card">
+                <h3>Estimated Daily Earnings</h3>
+                <div class="value" id="estimated-earnings">0.00 <span class="currency">DUCO</span></div>
+                <div id="usd-earnings" style="font-size: 14px; color: #00ff00; margin-top: 4px;">$0.0000 <span class="currency">USD</span></div>
+            </div>
+            <div class="card stat-card" style="grid-column: span 2;">
+                <h3>Next Milestone Progress</h3>
+                <div class="progress-container">
+                    <div id="milestone-progress" class="progress-bar"></div>
+                </div>
+                <div class="milestone-info">
+                    <span>Progress</span>
+                    <span id="next-milestone-val">100 DUCO</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reihe 3: Hardware & Live Chart -->
+        <div class="grid" style="grid-template-columns: 1fr 2fr;">
+            <div class="card">
+                <h3 style="margin-top:0; font-size:14px; color:var(--text-muted); text-transform:uppercase;">Hardware Breakdown</h3>
+                <div id="hardware-breakdown">
+                    <p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>
+                </div>
+            </div>
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="margin:0; font-size:14px; color:var(--text-muted); text-transform:uppercase;">Global Market Price</h3>
+                    <div id="trend-indicator" class="trend-neutral">Syncing...</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sektions-Trenner -->
         <div class="donation-card">
             <div class="rgb-btn">💸 Leave a Tip / Donations to leanderott</div>
         </div>
