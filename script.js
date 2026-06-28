@@ -232,12 +232,11 @@ function fetchCombinedData() {
 
     // 2. Benutzerdaten (Balance + Miner) von der offiziellen User-API via CORS-Proxy
     const apiUrl = `https://server.duinocoin.com/v3/users/${username}`;
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
 
     fetch(proxyUrl)
         .then(response => response.json())
-        .then(proxyData => {
-            const data = JSON.parse(proxyData.contents);
+        .then(data => {
 
             if (!data.success) {
                 console.error("User not found:", data.message);
