@@ -222,14 +222,11 @@ function fetchCombinedData() {
             // corsproxy gibt manchmal {contents: "..."} zurück
             const result = data.result ? data.result : data;
 
-            // Preis direkt aus der v2 API
-            const priceSource = result.prices || result.exch_rates;
-            if (priceSource) {
-                // prices: {max: 0.00006997, ...} oder exch_rates: {max: {price: 0.00006997}, ...}
-                const maxPrice = result.prices ? result.prices.max : (result.exch_rates.max ? result.exch_rates.max.price : 0);
-                if (maxPrice > 0) currentPriceUsd = maxPrice;
+            // Preis = Durchschnitt aller verfügbaren Exchanges aus result.prices
+            if (result.prices) {
+                const vals = Object.values(result.prices).filter(p => p > 0);
+                if (vals.length > 0) currentPriceUsd = vals.reduce((a, b) => a + b, 0) / vals.length;
             }
-            console.log("Price:", currentPriceUsd, "prices:", result.prices, "exch_rates:", result.exch_rates);
 
             const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             if (priceChart.data.labels.length > 15) {
@@ -251,8 +248,9 @@ function fetchCombinedData() {
             // Balance
             const userBalance = parseFloat(result.balance.balance) || 0;
             liveBalance = userBalance;
+            const balanceUsd = userBalance * currentPriceUsd;
             document.getElementById('account-balance').innerHTML =
-                `${userBalance.toFixed(8)} <span class="currency">DUCO</span>`;
+                `${userBalance.toFixed(8)} <span class="currency">DUCO</span><br><span style="font-size:14px;color:var(--text-muted);">≈ $${balanceUsd.toFixed(6)} USD</span>`;
             handleMilestones(userBalance);
 
             // Miner
@@ -325,14 +323,18 @@ function fetchCombinedData() {
             if (currentMinerCount === 0) {
                 breakdownContainer.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>`;
             } else {
-                for (const [hwName, count] of Object.entries(hardwareCounts)) {
+                breakdownContainer.innerHTML = "";
+                miners.forEach((miner, i) => {
+                    const hr = (parseFloat(miner.hashrate) / 1000).toFixed(2);
+                    const software = miner.software || "Unknown Device";
+                    const identifier = miner.identifier && miner.identifier !== "None" ? ` · ${miner.identifier}` : ``;
                     breakdownContainer.innerHTML += `
                         <div class="hardware-item">
-                            <span>⚙️ ${hwName}:</span>
-                            <strong>${count}</strong>
+                            <span>⚙️ ${software}${identifier}</span>
+                            <strong>${hr} KH/s</strong>
                         </div>
                     `;
-                }
+                });
             }
 
             const dailyUsdValue = calculatedDailyDuco * currentPriceUsd;
