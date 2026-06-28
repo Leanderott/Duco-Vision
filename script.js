@@ -222,10 +222,11 @@ function fetchCombinedData() {
             // corsproxy gibt manchmal {contents: "..."} zurück
             const result = data.result ? data.result : data;
 
-            // Preis = Durchschnitt aller verfügbaren Exchanges aus result.prices
-            if (result.prices) {
-                const vals = Object.values(result.prices).filter(p => p > 0);
-                if (vals.length > 0) currentPriceUsd = vals.reduce((a, b) => a + b, 0) / vals.length;
+            // BSC DUCO Preis von PancakeSwap
+            if (result.prices && result.prices.pancake > 0) {
+                currentPriceUsd = result.prices.pancake;
+            } else if (result.prices && result.prices.sunswap > 0) {
+                currentPriceUsd = result.prices.sunswap;
             }
 
             const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
