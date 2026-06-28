@@ -222,12 +222,14 @@ function fetchCombinedData() {
             // corsproxy gibt manchmal {contents: "..."} zurück
             const result = data.result ? data.result : data;
 
-            // Preis direkt aus der v2 API (max price = höchster verfügbarer Kurs)
-            if (data.prices && data.prices.max > 0) {
-                currentPriceUsd = data.prices.max;
-            } else if (data.exch_rates && data.exch_rates.max && data.exch_rates.max.price > 0) {
-                currentPriceUsd = data.exch_rates.max.price;
+            // Preis direkt aus der v2 API
+            const priceSource = result.prices || result.exch_rates;
+            if (priceSource) {
+                // prices: {max: 0.00006997, ...} oder exch_rates: {max: {price: 0.00006997}, ...}
+                const maxPrice = result.prices ? result.prices.max : (result.exch_rates.max ? result.exch_rates.max.price : 0);
+                if (maxPrice > 0) currentPriceUsd = maxPrice;
             }
+            console.log("Price:", currentPriceUsd, "prices:", result.prices, "exch_rates:", result.exch_rates);
 
             const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             if (priceChart.data.labels.length > 15) {
@@ -334,7 +336,8 @@ function fetchCombinedData() {
             }
 
             const dailyUsdValue = calculatedDailyDuco * currentPriceUsd;
-            document.getElementById('usd-earnings').innerHTML = `$${(liveBalance * currentPriceUsd).toFixed(8)} <span class="currency">USD</span>`;
+            const dailyUsd = calculatedDailyDuco * currentPriceUsd;
+            document.getElementById('usd-earnings').innerHTML = `$${dailyUsd.toFixed(8)} <span class="currency">USD</span>`;
         })
         .catch(err => {
             console.error("User API failed:", err);
