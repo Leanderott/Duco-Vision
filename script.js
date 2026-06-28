@@ -206,15 +206,29 @@ function updateChartColor(trend, currentPrice) {
 
 // --- API-ABFRAGE: Marktpreis via GitHub Stats, Nutzerdaten via offizieller User-API ---
 function fetchCombinedData() {
-    // 1. Globaler Marktpreis aus der Statistics-API
-    $.ajax({
-        url: 'https://raw.githubusercontent.com/revoxhere/duco-statistics/master/api.json',
-        method: 'GET',
-        dataType: 'json',
-        success: function(apiData) {
-            currentPriceUsd = apiData["Duco price"] || 0.00005;
-            const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    // Benutzerdaten + Preis aus der v2 User-API
+    const apiUrl = `https://server.duinocoin.com/v2/users/${username}`;
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
 
+    fetch(proxyUrl)
+        .then(response => response.json())
+        .then(data => {
+
+            if (!data.success) {
+                console.error("User not found:", data.message);
+                return;
+            }
+
+            const result = data;
+
+            // Preis direkt aus der v2 API (max price = höchster verfügbarer Kurs)
+            if (data.prices && data.prices.max > 0) {
+                currentPriceUsd = data.prices.max;
+            } else if (data.exch_rates && data.exch_rates.max && data.exch_rates.max.price > 0) {
+                currentPriceUsd = data.exch_rates.max.price;
+            }
+
+            const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             if (priceChart.data.labels.length > 15) {
                 priceChart.data.labels.shift();
                 priceChart.data.datasets[0].data.shift();
@@ -230,26 +244,6 @@ function fetchCombinedData() {
             }
             lastPrice = currentPriceUsd;
             priceChart.update();
-        },
-        error: function(err) {
-            console.error("Price API failed:", err);
-        }
-    });
-
-    // 2. Benutzerdaten (Balance + Miner) von der offiziellen User-API via CORS-Proxy
-    const apiUrl = `https://server.duinocoin.com/v3/users/${username}`;
-    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
-
-    fetch(proxyUrl)
-        .then(response => response.json())
-        .then(data => {
-
-            if (!data.success) {
-                console.error("User not found:", data.message);
-                return;
-            }
-
-            const result = data.result;
 
             // Balance
             const userBalance = parseFloat(result.balance.balance) || 0;
@@ -274,7 +268,8 @@ function fetchCombinedData() {
                 // Formel-Fallback: sharetime + diff
                 const sharetime = parseFloat(miner.sharetime) || 1;
                 const diff = parseFloat(miner.diff) || 0;
-                formulaEarnings += (86400 / sharetime) * (diff / 1000000);
+                const wd = parseFloat(miner.wd) || 0;
+                formulaEarnings += (86400 / sharetime) * (wd / 3800000);
 
                 const software = miner.software || "Unknown Device";
                 hardwareCounts[software] = (hardwareCounts[software] || 0) + 1;
