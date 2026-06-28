@@ -261,7 +261,15 @@ function fetchCombinedData() {
                 currentMinerCount++;
                 const hr = parseFloat(miner.hashrate) || 0;
                 totalHashrate += hr;
-                calculatedDailyDuco += hr * 0.0072;
+
+                // Tagesverdienst: Shares pro Sekunde * 86400 Sekunden * DUCO pro Share
+                // DUCO pro Share = diff / 1e6 (Duino-Coin Standard-Näherung)
+                const sharetime = parseFloat(miner.sharetime) || 1;
+                const diff = parseFloat(miner.diff) || 0;
+                const sharesPerDay = 86400 / sharetime;
+                const ducoPerShare = diff / 1000000;
+                calculatedDailyDuco += sharesPerDay * ducoPerShare;
+
                 const software = miner.software || "Unknown Device";
                 hardwareCounts[software] = (hardwareCounts[software] || 0) + 1;
             });
