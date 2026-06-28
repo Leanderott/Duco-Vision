@@ -7,7 +7,10 @@ let priceChart;
 let lastPrice = 0;
 let lastMinerCount = -1; 
 let calculatedDailyDuco = 0;
-let currentPriceUsd = 0.00005; 
+let currentPriceUsd = 0.00005;
+let liveBalance = 0;
+let liveEarningsPerSecond = 0;
+let liveCounterInterval = null;
 
 const milestones = [1, 100, 500, 1000, 10000, 100000, 1000000, 10000000, 100000000];
 
@@ -50,6 +53,17 @@ loginBtn.addEventListener('click', () => {
         
         // Intervall: Alle 20 Sekunden aktualisieren
         setInterval(fetchCombinedData, 20000);
+
+        // Live-Counter: Balance und Earnings jede Sekunde hochzählen
+        if (liveCounterInterval) clearInterval(liveCounterInterval);
+        liveCounterInterval = setInterval(() => {
+            liveBalance += liveEarningsPerSecond;
+            document.getElementById('account-balance').innerHTML =
+                `${liveBalance.toFixed(8)} <span class="currency">DUCO</span>`;
+            const dailyUsd = calculatedDailyDuco * currentPriceUsd;
+            document.getElementById('usd-earnings').innerHTML =
+                `$${(liveBalance * currentPriceUsd).toFixed(8)} <span class="currency">USD</span>`;
+        }, 1000);
     } else {
         alert("Please enter a valid Duino-Coin username.");
     }
@@ -247,7 +261,9 @@ function fetchCombinedData() {
 
             // Balance
             const userBalance = parseFloat(result.balance.balance) || 0;
-            document.getElementById('account-balance').innerHTML = `${userBalance.toFixed(2)} <span class="currency">DUCO</span>`;
+            liveBalance = userBalance;
+            document.getElementById('account-balance').innerHTML =
+                `${userBalance.toFixed(8)} <span class="currency">DUCO</span>`;
             handleMilestones(userBalance);
 
             // Miner
@@ -262,17 +278,20 @@ function fetchCombinedData() {
                 const hr = parseFloat(miner.hashrate) || 0;
                 totalHashrate += hr;
 
-                // Tagesverdienst: Shares pro Sekunde * 86400 Sekunden * DUCO pro Share
-                // DUCO pro Share = diff / 1e6 (Duino-Coin Standard-Näherung)
+                // Tagesverdienst: (accepted Shares / Laufzeit in Sek) * 86400 * DUCO pro Share
+                // DUCO pro Share ≈ diff / 100000 (Duino-Coin Kolka Näherung)
                 const sharetime = parseFloat(miner.sharetime) || 1;
                 const diff = parseFloat(miner.diff) || 0;
                 const sharesPerDay = 86400 / sharetime;
-                const ducoPerShare = diff / 1000000;
+                const ducoPerShare = diff / 100000;
                 calculatedDailyDuco += sharesPerDay * ducoPerShare;
 
                 const software = miner.software || "Unknown Device";
                 hardwareCounts[software] = (hardwareCounts[software] || 0) + 1;
             });
+
+            // Live earnings per second
+            liveEarningsPerSecond = calculatedDailyDuco / 86400;
 
             // Boxen befüllen
             document.getElementById('miner-count').textContent = currentMinerCount;
@@ -283,8 +302,8 @@ function fetchCombinedData() {
             lastMinerCount = currentMinerCount;
 
             const hashrateKhas = totalHashrate / 1000;
-            document.getElementById('total-hashrate').innerHTML = `${hashrateKhas.toFixed(2)} <span class="currency">KH/s</span>`;
-            document.getElementById('estimated-earnings').innerHTML = `${calculatedDailyDuco.toFixed(2)} <span class="currency">DUCO</span>`;
+            document.getElementById('total-hashrate').innerHTML = `${hashrateKhas.toFixed(4)} <span class="currency">KH/s</span>`;
+            document.getElementById('estimated-earnings').innerHTML = `${calculatedDailyDuco.toFixed(8)} <span class="currency">DUCO</span>`;
 
             // Hardware-Breakdown rendern
             const breakdownContainer = document.getElementById('hardware-breakdown');
@@ -304,7 +323,7 @@ function fetchCombinedData() {
             }
 
             const dailyUsdValue = calculatedDailyDuco * currentPriceUsd;
-            document.getElementById('usd-earnings').innerHTML = `$${dailyUsdValue.toFixed(12)} <span class="currency">USD</span>`;
+            document.getElementById('usd-earnings').innerHTML = `$${(liveBalance * currentPriceUsd).toFixed(8)} <span class="currency">USD</span>`;
         })
         .catch(err => {
             console.error("User API failed:", err);
