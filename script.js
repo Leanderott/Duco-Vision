@@ -11,8 +11,7 @@ let currentPriceUsd = 0.00005;
 let liveBalance = 0;
 let liveEarningsPerSecond = 0;
 let liveCounterInterval = null;
-let initialBalance = null;
-let initialBalanceTime = null;
+let balanceHistory = []; // [{balance, time}]
 
 const milestones = [1, 100, 500, 1000, 10000, 100000, 1000000, 10000000, 100000000];
 
@@ -279,15 +278,15 @@ function fetchCombinedData() {
 
             // Earnings per 24h basierend auf echtem Balance-Zuwachs
             const now = Date.now();
-            if (initialBalance === null) {
-                initialBalance = userBalance;
-                initialBalanceTime = now;
-                calculatedDailyDuco = 0;
-                document.getElementById('estimated-earnings').innerHTML = `<span style="color:var(--text-muted);font-size:13px;">Wird gemessen...</span>`;
-            } else {
-                const elapsedSeconds = (now - initialBalanceTime) / 1000;
-                const balanceDelta = userBalance - initialBalance;
-                if (elapsedSeconds > 10 && balanceDelta > 0) {
+            balanceHistory.push({ balance: userBalance, time: now });
+            if (balanceHistory.length > 20) balanceHistory.shift(); // max 20 Einträge (~100 Sek)
+
+            if (balanceHistory.length >= 2) {
+                const oldest = balanceHistory[0];
+                const newest = balanceHistory[balanceHistory.length - 1];
+                const elapsedSeconds = (newest.time - oldest.time) / 1000;
+                const balanceDelta = newest.balance - oldest.balance;
+                if (elapsedSeconds > 0 && balanceDelta > 0) {
                     calculatedDailyDuco = (balanceDelta / elapsedSeconds) * 86400;
                 }
             }
@@ -306,6 +305,9 @@ function fetchCombinedData() {
             if (calculatedDailyDuco > 0) {
                 document.getElementById('estimated-earnings').innerHTML =
                     `${calculatedDailyDuco.toFixed(8)} <span class="currency">DUCO</span>`;
+            } else {
+                document.getElementById('estimated-earnings').innerHTML =
+                    `<span style="color:var(--text-muted);font-size:13px;">Wird gemessen...</span>`;
             }
 
             // Hardware-Breakdown rendern
