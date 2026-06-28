@@ -239,8 +239,7 @@ function fetchUserData() {
                     const sharetime = parseFloat(miner.sharetime) || 1;
                     const diff = parseFloat(miner.diff) || 0;
                     const wd = parseFloat(miner.wd) || 0;
-                    // wd / 3793705 kalibriert auf ~12 DUCO/Tag für ESP32
-                    formulaEarnings += (86400 / sharetime) * (wd / 3793705);
+                    formulaEarnings += (86400 / sharetime) * (wd / 10067237);
 
                     const software = miner.software || "Unknown Device";
                     hardwareCounts[software] = (hardwareCounts[software] || 0) + 1;
