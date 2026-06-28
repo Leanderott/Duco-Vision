@@ -55,7 +55,6 @@ loginBtn.addEventListener('click', () => {
         // Intervall: Alle 5 Sekunden aktualisieren
         setInterval(fetchCombinedData, 5000);
 
-
     } else {
         alert("Please enter a valid Duino-Coin username.");
     }
@@ -204,9 +203,34 @@ function updateChartColor(trend, currentPrice) {
     priceChart.update();
 }
 
-// --- API-ABFRAGE: Marktpreis via GitHub Stats, Nutzerdaten via offizieller User-API ---
+// --- API-ABFRAGE: Marktpreis via stabiler GitHub-API, Nutzerdaten via User-API ---
 function fetchCombinedData() {
-    // Benutzerdaten + Preis aus der v2 User-API
+    // 1. Marktpreis unabhängig und stabil direkt vom GitHub-Spiegel holen
+    fetch('https://raw.githubusercontent.com/revoxhere/duino-coin/master/api.json')
+        .then(res => res.json())
+        .then(apiData => {
+            currentPriceUsd = apiData["Duco price"] || 0.00005;
+            
+            const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            if (priceChart.data.labels.length > 15) {
+                priceChart.data.labels.shift();
+                priceChart.data.datasets[0].data.shift();
+            }
+            priceChart.data.labels.push(currentTime);
+            priceChart.data.datasets[0].data.push(currentPriceUsd);
+            
+            if (lastPrice !== 0) {
+                if (currentPriceUsd > lastPrice) updateChartColor('up', currentPriceUsd);
+                else if (currentPriceUsd < lastPrice) updateChartColor('down', currentPriceUsd);
+            } else {
+                updateChartColor('neutral', currentPriceUsd);
+            }
+            lastPrice = currentPriceUsd;
+            priceChart.update();
+        })
+        .catch(err => console.error("Global Price Sync failed:", err));
+
+    // 2. Deine User-Daten laden (und den korrigierten Preis für die USD-Boxen nutzen)
     const apiUrl = `https://server.duinocoin.com/v2/users/${username}`;
     const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
 
@@ -219,28 +243,7 @@ function fetchCombinedData() {
                 return;
             }
 
-            // corsproxy gibt manchmal {contents: "..."} zurück
             const result = data.result ? data.result : data;
-
-            // Preis aus result.prices + Chart aktualisieren
-            if (result.prices && result.prices.max > 0) {
-                currentPriceUsd = result.prices.max;
-            }
-            const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            if (priceChart.data.labels.length > 15) {
-                priceChart.data.labels.shift();
-                priceChart.data.datasets[0].data.shift();
-            }
-            priceChart.data.labels.push(currentTime);
-            priceChart.data.datasets[0].data.push(currentPriceUsd);
-            if (lastPrice !== 0) {
-                if (currentPriceUsd > lastPrice) updateChartColor('up', currentPriceUsd);
-                else if (currentPriceUsd < lastPrice) updateChartColor('down', currentPriceUsd);
-            } else {
-                updateChartColor('neutral', currentPriceUsd);
-            }
-            lastPrice = currentPriceUsd;
-            priceChart.update();
 
             // Balance
             const userBalance = parseFloat(result.balance.balance) || 0;
@@ -263,7 +266,6 @@ function fetchCombinedData() {
                 const hr = parseFloat(miner.hashrate) || 0;
                 totalHashrate += hr;
 
-                // Formel-Fallback: sharetime + diff
                 const sharetime = parseFloat(miner.sharetime) || 1;
                 const diff = parseFloat(miner.diff) || 0;
                 const wd = parseFloat(miner.wd) || 0;
@@ -290,7 +292,6 @@ function fetchCombinedData() {
                 }
             }
 
-            // Nutze Formel wenn Balance-Delta nicht funktioniert
             if (!deltaWorked && formulaEarnings > 0) {
                 calculatedDailyDuco = formulaEarnings;
             }
@@ -315,8 +316,6 @@ function fetchCombinedData() {
 
             // Hardware-Breakdown rendern
             const breakdownContainer = document.getElementById('hardware-breakdown');
-            breakdownContainer.innerHTML = "";
-
             if (currentMinerCount === 0) {
                 breakdownContainer.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>`;
             } else {
@@ -334,7 +333,7 @@ function fetchCombinedData() {
                 });
             }
 
-            const dailyUsdValue = calculatedDailyDuco * currentPriceUsd;
+            // Umrechnung in USD für den geschätzten Tagesverdienst
             const dailyUsd = calculatedDailyDuco * currentPriceUsd;
             document.getElementById('usd-earnings').innerHTML = `$${dailyUsd.toFixed(8)} <span class="currency">USD</span>`;
         })
