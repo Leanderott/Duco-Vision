@@ -7,7 +7,7 @@ let priceChart;
 let lastPrice = 0;
 let lastMinerCount = -1; 
 let calculatedDailyDuco = 0;
-let currentPriceUsd = 0.00007021; // Start-Fallback
+let currentPriceUsd = 0.00007023; // Sicherer lokaler Startwert
 
 const milestones = [1, 100, 500, 1000, 10000, 100000, 1000000, 10000000, 100000000];
 
@@ -45,14 +45,14 @@ loginBtn.addEventListener('click', () => {
         
         initChart();
         
-        // Sofort beim Login alles einmal abfragen
+        // Erstes Laden beim Start
         fetchPriceData();
         fetchMinerAndBalanceData();
         
-        // Das Dashboard und Diagramm-Punkte refreshen stur alle 5 Sekunden
+        // REFRESH 1: Deine Miner & Kontostände laden alle 5 Sekunden (Völlig unabhängig!)
         setInterval(fetchMinerAndBalanceData, 5000);
         
-        // Der Live-Preis wird alle 10 Sekunden unabhängig aktualisiert (kein Rate-Limit!)
+        // REFRESH 2: Der Krypto-Preis holt sich alle 10 Sekunden neue Daten
         setInterval(fetchPriceData, 10000);
     } else {
         alert("Please enter a valid Duino-Coin username.");
@@ -203,34 +203,26 @@ function updateChartColor(trend, currentPrice) {
     priceChart.data.datasets[0].backgroundColor = newGradient;
 }
 
-// VÖLLIG NEU & STABIL: Holt den echten Live-Preis über die freie, unlimitierte Wynd-API
+// ================= VÖLLIG ISOLIERT =================
+// Holt nur den Preis aus der github-raw Datei (Keine CORS-Sperren oder 403-Fehler)
 function fetchPriceData() {
     $.ajax({
-        url: 'https://server.duinocoin.com/api/v1/rates?coin=DUCO',
+        url: 'https://raw.githubusercontent.com/revoxhere/duino-coin/master/api.json',
         method: 'GET',
         dataType: 'json',
-        success: function(response) {
-            if (response && response.usd) {
-                currentPriceUsd = parseFloat(response.usd);
+        success: function(apiData) {
+            if (apiData && apiData["Duco price"]) {
+                currentPriceUsd = parseFloat(apiData["Duco price"]);
             }
         },
         error: function() {
-            // Absolut krisensicherer Fallback über die offizielle Duco-Preisseite, falls der Hauptserver zickt
-            $.ajax({
-                url: 'https://raw.githubusercontent.com/revoxhere/duino-coin/master/api.json',
-                method: 'GET',
-                dataType: 'json',
-                success: function(fallbackData) {
-                    if (fallbackData["Duco price"]) {
-                        currentPriceUsd = parseFloat(fallbackData["Duco price"]);
-                    }
-                }
-            });
+            console.warn("Krypto-Preissync fehlgeschlagen. Behalte alten Wert.");
         }
     });
 }
 
-// Lädt deine Miner-Daten und aktualisiert das Diagramm stur alle 5 Sekunden mit dem frischen Preis
+// ================= VÖLLIG ISOLIERT =================
+// Aktualisiert deine Miner und die Balance stur alle 5 Sekunden
 function fetchMinerAndBalanceData() {
     $.ajax({
         url: 'https://raw.githubusercontent.com/revoxhere/duino-coin/master/api.json',
@@ -240,7 +232,7 @@ function fetchMinerAndBalanceData() {
 
             const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-            // Drückt den NEUEN, aktuellen Preis alle 5 Sekunden in den Chart
+            // Aktualisiert das Diagramm stur alle 5 Sekunden mit dem aktuell gespeicherten Preis
             if (priceChart.data.labels.length > 15) {
                 priceChart.data.labels.shift();
                 priceChart.data.datasets[0].data.shift();
@@ -346,7 +338,7 @@ function fetchMinerAndBalanceData() {
             document.getElementById('total-hashrate').innerHTML = `${hashrateKhas.toFixed(2)} <span class="currency">KH/s</span>`;
             document.getElementById('estimated-earnings').innerHTML = `${calculatedDailyDuco.toFixed(2)} <span class="currency">DUCO</span>`;
 
-            // Hardware-Breakdown
+            // Hardware-Breakdown rendern
             const breakdownContainer = document.getElementById('hardware-breakdown');
             breakdownContainer.innerHTML = "";
             
@@ -366,11 +358,10 @@ function fetchMinerAndBalanceData() {
             const dailyUsdValue = calculatedDailyDuco * currentPriceUsd;
             document.getElementById('usd-earnings').innerHTML = `$${dailyUsdValue.toFixed(8)} <span class="currency">USD</span>`;
             
-            // Diagramm live rendern
             priceChart.update();
         },
         error: function(err) {
-            console.error("Critical API Stream sync failed:", err);
+            console.error("Miner-Abfrage fehlgeschlagen, läuft in 5 Sekunden neu:", err);
         }
     });
 }
