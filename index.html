@@ -194,10 +194,14 @@
         }
 
         .card-description {
+            display: none;
+        }
+        #card-modal .card-description {
+            display: block;
             font-size: 13px;
-            color: var(--text-muted);
-            margin-top: 6px;
-            line-height: 1.5;
+            color: #aaa;
+            margin-top: 10px;
+            line-height: 1.6;
         }
 
         /* RGB Sektions-Trenner */
@@ -317,7 +321,7 @@
 
         <!-- Sektions-Trenner -->
         <div class="donation-card">
-            <div class="rgb-btn">💸 Leave a Tip / Donations to leanderott</div>
+            <div class="rgb-btn">Leave a Tip / Donations to leanderott</div>
         </div>
 
         <!-- Cbox Live-Chat Section -->
@@ -374,8 +378,7 @@
         function openModal(card) {
             modal.innerHTML = card.innerHTML;
             // Show full description in modal
-            const desc = modal.querySelector('.card-description');
-            if (desc) desc.style.color = '#aaa';
+
             modal.style.opacity = '1';
             modal.style.pointerEvents = 'all';
             modal.style.transform = 'translate(-50%, -50%) scale(1)';

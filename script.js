@@ -206,32 +206,6 @@ function updateChartColor(trend, currentPrice) {
 
 // --- API-ABFRAGE: Marktpreis via GitHub Stats, Nutzerdaten via offizieller User-API ---
 function fetchCombinedData() {
-    // Offizieller DUCO Preis von server.duinocoin.com
-    fetch(`https://corsproxy.io/?${encodeURIComponent('https://server.duinocoin.com/')}`)
-        .then(r => r.json())
-        .then(statsData => {
-            const price = statsData["Duco price"] || statsData["Duco bsc price"] || statsData["Duco pancake price"] || 0;
-            if (price > 0) {
-                currentPriceUsd = price;
-                const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                if (priceChart.data.labels.length > 15) {
-                    priceChart.data.labels.shift();
-                    priceChart.data.datasets[0].data.shift();
-                }
-                priceChart.data.labels.push(currentTime);
-                priceChart.data.datasets[0].data.push(currentPriceUsd);
-                if (lastPrice !== 0) {
-                    if (currentPriceUsd > lastPrice) updateChartColor('up', currentPriceUsd);
-                    else if (currentPriceUsd < lastPrice) updateChartColor('down', currentPriceUsd);
-                } else {
-                    updateChartColor('neutral', currentPriceUsd);
-                }
-                lastPrice = currentPriceUsd;
-                priceChart.update();
-            }
-        })
-        .catch(err => console.error("Price fetch failed:", err));
-
     // Benutzerdaten + Preis aus der v2 User-API
     const apiUrl = `https://server.duinocoin.com/v2/users/${username}`;
     const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
@@ -247,6 +221,26 @@ function fetchCombinedData() {
 
             // corsproxy gibt manchmal {contents: "..."} zurück
             const result = data.result ? data.result : data;
+
+            // Preis aus result.prices + Chart aktualisieren
+            if (result.prices && result.prices.max > 0) {
+                currentPriceUsd = result.prices.max;
+            }
+            const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            if (priceChart.data.labels.length > 15) {
+                priceChart.data.labels.shift();
+                priceChart.data.datasets[0].data.shift();
+            }
+            priceChart.data.labels.push(currentTime);
+            priceChart.data.datasets[0].data.push(currentPriceUsd);
+            if (lastPrice !== 0) {
+                if (currentPriceUsd > lastPrice) updateChartColor('up', currentPriceUsd);
+                else if (currentPriceUsd < lastPrice) updateChartColor('down', currentPriceUsd);
+            } else {
+                updateChartColor('neutral', currentPriceUsd);
+            }
+            lastPrice = currentPriceUsd;
+            priceChart.update();
 
             // Balance
             const userBalance = parseFloat(result.balance.balance) || 0;
