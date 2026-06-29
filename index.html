@@ -27,24 +27,11 @@
             align-items: center;
             min-height: 100vh;
             box-sizing: border-box;
-            overflow: hidden;
-        }
-
-        canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
         }
 
         .container {
             width: 100%;
             max-width: 1000px;
-            position: relative;
-            z-index: 10;
         }
 
         /* Basis-Karte mit permanentem Orangen Leuchten */
@@ -70,7 +57,7 @@
         #login-overlay {
             position: fixed;
             inset: 0;
-            background-color: transparent;
+            background-color: var(--bg-color);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -81,10 +68,11 @@
             text-align: center;
             max-width: 400px;
             width: 100%;
-            position: relative;
-            z-index: 1005;
         }
-        .login-card:hover { transform: none; cursor: default; }
+        .login-card:hover {
+            transform: none;
+            cursor: default;
+        }
 
         .login-card h2 {
             color: var(--accent-color);
@@ -305,203 +293,4 @@
         @keyframes rgbGlow {
             0% { border-color: #ff0000; box-shadow: 0 0 25px rgba(255, 0, 0, 0.6); }
             33% { border-color: #00ff00; box-shadow: 0 0 25px rgba(0, 255, 0, 0.6); }
-            66% { border-color: #0000ff; box-shadow: 0 0 25px rgba(0, 0, 255, 0.6); }
-            100% { border-color: #ff0000; box-shadow: 0 0 25px rgba(255, 0, 0, 0.6); }
-        }
-
-        .donation-card {
-            text-align: center;
-            margin-top: 35px;
-            margin-bottom: 25px;
-        }
-
-        .rgb-btn {
-            background-color: #0a0a0a;
-            color: #ffffff;
-            border: 4px solid #ff0000;
-            padding: 22px 45px;
-            font-size: 22px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 750px;
-            display: inline-block;
-            animation: rgbGlow 3s infinite linear;
-            cursor: default;
-        }
-    </style>
-</head>
-<body>
-
-    <canvas id="canvas"></canvas>
-
-    <div id="login-overlay">
-        <div class="card login-card" id="login-container-card">
-            <h2>DUCO Overview</h2>
-            <p>Enter your Duino-Coin username to start monitoring</p>
-            <label for="username-input" class="hidden">Username Input</label>
-            <input type="text" id="username-input" placeholder="Duino-Coin Username" autocomplete="off">
-            <button id="login-btn-trigger">Launch Dashboard</button>
-            <button id="login-btn" class="hidden">Hidden Logic Trigger</button>
-        </div>
-    </div>
-
-    <div id="card-overlay"></div>
-
-    <div id="dashboard" class="container hidden">
-        <div class="header">
-            <h1>Duino-Coin <span id="user-display">@USER</span></h1>
-        </div>
-
-        <div class="grid">
-            <div class="card stat-card" data-expandable>
-                <h3>Account Balance</h3>
-                <div class="value" id="account-balance">0.00 <span class="currency">DUCO</span></div>
-                <div class="card-description">Your total DUCO balance including all mined and received coins. Updates every 5 seconds.</div>
-            </div>
-            <div class="card stat-card" data-expandable>
-                <h3>Active Miners</h3>
-                <div class="value" id="miner-count">0</div>
-                <div class="card-description">Number of active CPUs currently connected and submitting shares to the network.</div>
-            </div>
-            <div class="card stat-card" data-expandable>
-                <h3>Total Hashrate</h3>
-                <div class="value" id="total-hashrate">0.00 <span class="currency">KH/s</span></div>
-                <div class="card-description">Combined hashing power of all your active miners in kilohashes per second.</div>
-            </div>
-        </div>
-
-        <div class="grid">
-            <div class="card stat-card" data-expandable>
-                <h3>Estimated Daily Earnings</h3>
-                <div class="value" id="estimated-earnings">0.00 <span class="currency">DUCO</span></div>
-                <div id="usd-earnings" style="font-size: 14px; color: #00ff00; margin-top: 4px;">$0.0000 <span class="currency">USD</span></div>
-                <div class="card-description">Projected 24h earnings based on your current hashrate and network difficulty via the Kolka reward system.</div>
-            </div>
-            <div class="card stat-card" style="grid-column: span 2;" data-expandable>
-                <h3>Next Milestone Progress</h3>
-                <div class="progress-container">
-                    <div id="milestone-progress" class="progress-bar"></div>
-                </div>
-                <div class="milestone-info">
-                    <span>Progress</span>
-                    <span id="next-milestone-val">100 DUCO</span>
-                </div>
-                <div class="card-description">Track your journey to the next DUCO balance milestone. Unlock achievement notifications as you reach each goal.</div>
-            </div>
-        </div>
-
-        <div class="grid" style="grid-template-columns: 1fr 2fr;">
-            <div class="card" data-expandable>
-                <h3 style="margin-top:0; font-size:14px; color:var(--text-muted); text-transform:uppercase;">Hardware Breakdown</h3>
-                <div id="hardware-breakdown">
-                    <p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>
-                </div>
-                <div class="card-description" style="margin-top:12px;">Individual hashrate and software info for each of your connected mining devices.</div>
-            </div>
-            <div class="card" data-expandable>
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3 style="margin:0; font-size:14px; color:var(--text-muted); text-transform:uppercase;">Global DUCO Market Price</h3>
-                    <div id="trend-indicator" class="trend-neutral">Syncing...</div>
-                </div>
-                <div class="card-description" style="margin-top:4px;">Live global DUCO price from the official Duino-Coin API server. Updates every 5 seconds.</div>
-                <div class="chart-container">
-                    <canvas id="priceChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <div class="donation-card">
-            <div class="rgb-btn">Leave a Tip / Donations to leanderott</div>
-        </div>
-
-        <section class="card comment-section">
-            <h3>Global Community Chat</h3>
-            <p class="chat-info">Connect with other Duino-Coin miners instantly.</p>
-            <iframe src="https://www5.cbox.ws/box/?boxid=964262&boxtag=dmCmix&sec=main" 
-                    width="100%" 
-                    height="450" 
-                    allowtransparency="yes" 
-                    allow="autoplay" 
-                    frameborder="0" 
-                    marginheight="0" 
-                    marginwidth="0" 
-                    scrolling="auto"
-                    style="border-radius: 12px; background: #080808;"></iframe>
-        </section>
-    </div>
-
-    <div id="achievement-popup">
-        <div style="display:flex; align-items:center; gap:12px;">
-            <span style="font-size:24px;">🏆</span>
-            <span id="achievement-text" style="font-size:14px; color:#fff;">Milestone unlocked!</span>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
-
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-
-        let W = window.innerWidth;
-        let H = window.innerHeight;
-        canvas.width = W;
-        canvas.height = H;
-
-        window.addEventListener('resize', () => {
-            W = window.innerWidth;
-            H = window.innerHeight;
-            canvas.width = W;
-            canvas.height = H;
-        });
-
-        // --- ANIMATIONS-ZUSTAND ---
-        let phase = 'ambient'; // Beginne im Ambient-Modus
-        let phaseTimer = 0;
-
-        const COIN_RADIUS = 130;
-        const COIN_X = W / 2;
-        const COIN_Y = H / 2;
-
-        let coins = [];
-        let splinters = [];
-        let dust = [];
-        let stars = [];
-        let SHARDS = [];
-
-        // 1. Sterne (Hintergrund) initialisieren
-        for (let i = 0; i < 60; i++) {
-            stars.push({
-                x: Math.random(),
-                y: Math.random(),
-                r: Math.random() * 1.5 + 0.5,
-                vx: (Math.random() - 0.5) * 0.2,
-                vy: (Math.random() - 0.5) * 0.2,
-                a: Math.random(),
-                da: Math.random() * 0.005 + 0.002
-            });
-        }
-
-        // Vorab-Generierung von langsamen Shards für den ambienten Hintergrund
-        for (let i = 0; i < 15; i++) {
-            generateAmbientShard();
-        }
-
-        function generateAmbientShard() {
-            let pts = [];
-            let numPoints = Math.floor(Math.random() * 3) + 3;
-            let radius = Math.random() * 25 + 12;
-            for (let j = 0; j < numPoints; j++) {
-                let a = (j / numPoints) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
-                pts.push({ x: Math.cos(a) * radius, y: Math.sin(a) * radius });
-            }
-            SHARDS.push({
-                x: Math.random() * W,
-                y: Math.random() * H,
-                vx: (Math.random() - 0.5) * 0.25,
-                vy: (Math.random() - 0.5) * 0.25,
-                pts: pts,
-                rot: Math.
+            66% {
