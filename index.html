@@ -27,11 +27,10 @@
             align-items: center;
             min-height: 100vh;
             box-sizing: border-box;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
-        /* Hintergrund-Canvas für Scherben */
-        #bg-canvas {
+        canvas {
             position: fixed;
             top: 0;
             left: 0;
@@ -70,13 +69,12 @@
         /* Login Overlay */
         #login-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            inset: 0;
             background-color: transparent;
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            transition: opacity 0.5s ease;
         }
 
         .login-card {
@@ -85,14 +83,18 @@
             width: 100%;
             position: relative;
             z-index: 1005;
-            background-color: rgba(12, 12, 12, 0.95);
-            backdrop-filter: blur(8px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
         }
         .login-card:hover { transform: none; cursor: default; }
 
-        .login-card h2 { color: var(--accent-color); margin-bottom: 8px; }
-        .login-card p { color: var(--text-muted); margin-bottom: 24px; }
+        .login-card h2 {
+            color: var(--accent-color);
+            margin-bottom: 8px;
+        }
+
+        .login-card p {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
 
         input[type="text"] {
             width: 100%;
@@ -126,8 +128,13 @@
             transition: background 0.2s;
         }
 
-        button:hover { background-color: #e05500; }
-        .hidden { display: none !important; }
+        button:hover {
+            background-color: #e05500;
+        }
+
+        .hidden {
+            display: none !important;
+        }
 
         .header {
             display: flex;
@@ -136,8 +143,15 @@
             margin-bottom: 24px;
         }
 
-        .header h1 { margin: 0; font-size: 24px; }
-        #user-display { color: var(--accent-color); font-weight: bold; }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        #user-display {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
 
         .grid {
             display: grid;
@@ -146,22 +160,80 @@
             margin-bottom: 20px;
         }
 
-        .stat-card h3 { margin: 0 0 8px 0; font-size: 14px; color: var(--text-muted); text-transform: uppercase; }
-        .stat-card .value { font-size: 28px; font-weight: bold; margin-bottom: 4px; }
-        .currency { font-size: 14px; color: var(--text-muted); font-weight: normal; }
+        .stat-card h3 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .currency {
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: normal;
+        }
 
         /* Progress Bar */
-        .progress-container { background: #121212; border-radius: 8px; height: 8px; width: 100%; overflow: hidden; margin-top: 8px; }
-        .progress-bar { background: var(--accent-color); height: 100%; width: 0%; transition: width 0.5s ease; box-shadow: 0 0 8px var(--accent-color); }
-        .milestone-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+        .progress-container {
+            background: #121212;
+            border-radius: 8px;
+            height: 8px;
+            width: 100%;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-bar {
+            background: var(--accent-color);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 8px var(--accent-color);
+        }
+
+        .milestone-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
 
         /* Hardware Breakdown */
-        #hardware-breakdown { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-        .hardware-item { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; border-bottom: 1px solid #111; }
+        #hardware-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .hardware-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            padding: 6px 0;
+            border-bottom: 1px solid #111;
+        }
 
         /* Chart & Trend */
-        .chart-container { height: 300px; position: relative; margin-top: 16px; }
-        #trend-indicator { font-size: 14px; font-weight: bold; margin-top: 8px; }
+        .chart-container {
+            height: 300px;
+            position: relative;
+            margin-top: 16px;
+        }
+
+        #trend-indicator {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+
         .trend-neutral { color: var(--accent-color); }
         .trend-up { color: #00ff00; }
         .trend-down { color: #ff0000; }
@@ -169,17 +241,37 @@
         /* Achievement Popup */
         #achievement-popup {
             position: fixed;
-            bottom: -100px; left: 50%; transform: translateX(-50%);
-            background: #111; border: 2px solid var(--accent-color);
-            padding: 16px 24px; border-radius: 12px; z-index: 2000;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #111;
+            border: 2px solid var(--accent-color);
+            padding: 16px 24px;
+            border-radius: 12px;
+            z-index: 2000;
             transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 0 30px rgba(255,102,0,0.4); pointer-events: none;
+            box-shadow: 0 0 30px rgba(255,102,0,0.4);
+            pointer-events: none;
         }
-        #achievement-popup.show { bottom: 30px; }
 
-        .chat-info { color: var(--text-muted); font-size: 14px; margin: -10px 0 15px 0; }
-        .comment-section h3 { margin-top: 0; }
-        .comment-section:hover { transform: none; cursor: default; }
+        #achievement-popup.show {
+            bottom: 30px;
+        }
+
+        .chat-info {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin: -10px 0 15px 0;
+        }
+
+        .comment-section h3 {
+            margin-top: 0;
+        }
+
+        .comment-section:hover {
+            transform: none;
+            cursor: default;
+        }
 
         /* Card expansion overlay */
         #card-overlay {
@@ -191,6 +283,7 @@
             pointer-events: none;
             transition: opacity 0.4s ease;
         }
+
         #card-overlay.active {
             opacity: 1;
             pointer-events: all;
@@ -199,6 +292,7 @@
         .card-description {
             display: none;
         }
+
         #card-modal .card-description {
             display: block;
             font-size: 13px;
@@ -241,7 +335,7 @@
 </head>
 <body>
 
-    <canvas id="bg-canvas"></canvas>
+    <canvas id="canvas"></canvas>
 
     <div id="login-overlay">
         <div class="card login-card" id="login-container-card">
@@ -250,6 +344,7 @@
             <label for="username-input" class="hidden">Username Input</label>
             <input type="text" id="username-input" placeholder="Duino-Coin Username" autocomplete="off">
             <button id="login-btn-trigger">Launch Dashboard</button>
+            <button id="login-btn" class="hidden">Hidden Logic Trigger</button>
         </div>
     </div>
 
@@ -348,405 +443,65 @@
     <script src="script.js"></script>
 
     <script>
-        const bgCanvas = document.getElementById('bg-canvas');
-        const bgCtx = bgCanvas.getContext('2d');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
 
         let W = window.innerWidth;
         let H = window.innerHeight;
-        bgCanvas.width = W;
-        bgCanvas.height = H;
+        canvas.width = W;
+        canvas.height = H;
 
         window.addEventListener('resize', () => {
             W = window.innerWidth;
             H = window.innerHeight;
-            bgCanvas.width = W;
-            bgCanvas.height = H;
+            canvas.width = W;
+            canvas.height = H;
         });
 
-        let phase = 'ambient'; // ambient, intro, shatter, drift, finished
+        // --- ANIMATIONS-ZUSTAND ---
+        let phase = 'ambient'; // Beginne im Ambient-Modus
         let phaseTimer = 0;
 
-        const COIN_RADIUS = 120;
-        let COIN_X = W / 2;
-        let COIN_Y = H / 2;
+        const COIN_RADIUS = 130;
+        const COIN_X = W / 2;
+        const COIN_Y = H / 2;
 
         let coins = [];
         let splinters = [];
         let dust = [];
+        let stars = [];
         let SHARDS = [];
 
-        // Dauerhaft schwebende Hintergrund-Scherben generieren
-        for (let i = 0; i < 20; i++) {
-            generateAmbientShard();
-        }
-        // Etwas Hintergrundstaub
-        for (let i = 0; i < 40; i++) {
-            dust.push({
-                x: Math.random() * W,
-                y: Math.random() * H,
-                vx: (Math.random() - 0.5) * 0.4,
-                vy: (Math.random() - 0.5) * 0.4,
-                r: Math.random() * 2 + 0.5,
-                alpha: Math.random() * 0.5 + 0.2,
-                decay: 0,
-                color: Math.random() > 0.5 ? '#ff6600' : '#ffffff',
-                ambient: true
+        // 1. Sterne (Hintergrund) initialisieren
+        for (let i = 0; i < 60; i++) {
+            stars.push({
+                x: Math.random(),
+                y: Math.random(),
+                r: Math.random() * 1.5 + 0.5,
+                vx: (Math.random() - 0.5) * 0.2,
+                vy: (Math.random() - 0.5) * 0.2,
+                a: Math.random(),
+                da: Math.random() * 0.005 + 0.002
             });
+        }
+
+        // Vorab-Generierung von langsamen Shards für den ambienten Hintergrund
+        for (let i = 0; i < 15; i++) {
+            generateAmbientShard();
         }
 
         function generateAmbientShard() {
             let pts = [];
             let numPoints = Math.floor(Math.random() * 3) + 3;
-            let radius = Math.random() * 25 + 10;
+            let radius = Math.random() * 25 + 12;
             for (let j = 0; j < numPoints; j++) {
-                let a = (j / numPoints) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+                let a = (j / numPoints) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
                 pts.push({ x: Math.cos(a) * radius, y: Math.sin(a) * radius });
             }
             SHARDS.push({
                 x: Math.random() * W,
                 y: Math.random() * H,
-                vx: (Math.random() - 0.5) * 0.3,
-                vy: (Math.random() - 0.5) * 0.3,
+                vx: (Math.random() - 0.5) * 0.25,
+                vy: (Math.random() - 0.5) * 0.25,
                 pts: pts,
-                rot: Math.random() * Math.PI * 2,
-                drot: (Math.random() - 0.5) * 0.01,
-                gravity: 0,
-                life: 1.0,
-                decay: 0,
-                color: `rgba(255, 102, 0, ${Math.random() * 0.08 + 0.02})`,
-                ambient: true
-            });
-        }
-
-        function triggerShatterExplosion() {
-            COIN_X = window.innerWidth / 2;
-            COIN_Y = window.innerHeight / 2;
-
-            // Bestehende Umgebungsscherben beschleunigen weg von Mitte
-            SHARDS.forEach(s => {
-                let dx = s.x - COIN_X;
-                let dy = s.y - COIN_Y;
-                let dist = Math.sqrt(dx * dx + dy * dy) || 1;
-                s.vx += (dx / dist) * 4;
-                s.vy += (dy / dist) * 4;
-                s.decay = 0.005;
-                s.ambient = false;
-            });
-
-            // Münzkörper-Pixelierte Teile
-            const rows = 12;
-            const cols = 12;
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    let px = COIN_X + (c - cols / 2) * (COIN_RADIUS * 2 / cols);
-                    let py = COIN_Y + (r - rows / 2) * (COIN_RADIUS * 2 / rows);
-                    let dx = px - COIN_X;
-                    let dy = py - COIN_Y;
-                    let dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (dist < COIN_RADIUS) {
-                        let angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 0.3;
-                        let speed = Math.random() * 8 + 5 + (dist / COIN_RADIUS) * 4;
-                        let partColor = '#ff6600';
-                        if (Math.random() > 0.65) partColor = '#ffffff';
-
-                        coins.push({
-                            x: px, y: py,
-                            vx: Math.cos(angle) * speed,
-                            vy: Math.sin(angle) * speed - 2,
-                            size: Math.random() * 8 + 4,
-                            rot: Math.random() * Math.PI * 2,
-                            drot: (Math.random() - 0.5) * 0.2,
-                            gravity: 0.15,
-                            color: partColor
-                        });
-                    }
-                }
-            }
-
-            // Feine schnelle Glassplitter
-            for (let i = 0; i < 80; i++) {
-                let angle = Math.random() * Math.PI * 2;
-                let speed = Math.random() * 14 + 6;
-                splinters.push({
-                    x: COIN_X, y: COIN_Y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    l: Math.random() * 20 + 8,
-                    w: Math.random() * 2 + 1,
-                    rot: Math.random() * Math.PI,
-                    drot: (Math.random() - 0.5) * 0.4,
-                    gravity: 0.04,
-                    alpha: 1,
-                    decay: Math.random() * 0.015 + 0.008
-                });
-            }
-
-            // Explosionsstaub
-            for (let i = 0; i < 120; i++) {
-                let angle = Math.random() * Math.PI * 2;
-                let speed = Math.random() * 16 + 2;
-                dust.push({
-                    x: COIN_X, y: COIN_Y,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    r: Math.random() * 2.5 + 0.5,
-                    alpha: 1,
-                    decay: Math.random() * 0.02 + 0.005,
-                    color: Math.random() > 0.4 ? '#ff6600' : '#ffffff',
-                    ambient: false
-                });
-            }
-        }
-
-        function drawBaseCoin(alpha) {
-            bgCtx.save();
-            bgCtx.globalAlpha = alpha;
-            bgCtx.shadowBlur = 40;
-            bgCtx.shadowColor = "rgba(255, 102, 0, 0.5)";
-
-            bgCtx.beginPath();
-            bgCtx.arc(COIN_X, COIN_Y, COIN_RADIUS, 0, Math.PI * 2);
-            bgCtx.fillStyle = '#ff6600'; 
-            bgCtx.fill();
-            bgCtx.shadowBlur = 0;
-
-            const s = COIN_RADIUS / 100; 
-            bgCtx.save();
-            bgCtx.translate(COIN_X, COIN_Y);
-            bgCtx.fillStyle = '#ffffff';
-
-            bgCtx.beginPath();
-            bgCtx.moveTo(-42 * s, -55 * s);
-            bgCtx.lineTo(0 * s, -55 * s);
-            bgCtx.arc(0 * s, 0 * s, 55 * s, -Math.PI / 2, Math.PI / 2, false);
-            bgCtx.lineTo(-42 * s, 55 * s);
-            bgCtx.arc(-42 * s, 44 * s, 11 * s, Math.PI / 2, Math.PI, false);
-            bgCtx.lineTo(-53 * s, 33 * s);
-            bgCtx.arc(-42 * s, 33 * s, 11 * s, Math.PI, Math.PI / 2, true);
-            bgCtx.lineTo(0 * s, 33 * s);
-            bgCtx.arc(0 * s, 0 * s, 33 * s, Math.PI / 2, -Math.PI / 2, true);
-            bgCtx.lineTo(-42 * s, -33 * s);
-            bgCtx.arc(-42 * s, -33 * s, 11 * s, -Math.PI / 2, -Math.PI, true);
-            bgCtx.lineTo(-53 * s, -33 * s);
-            bgCtx.arc(-42 * s, -44 * s, 11 * s, -Math.PI, -Math.PI / 2, false);
-            bgCtx.closePath();
-            bgCtx.fill();
-
-            bgCtx.beginPath();
-            bgCtx.moveTo(-42 * s, -22 * s);
-            bgCtx.lineTo(-12 * s, -22 * s);
-            bgCtx.arc(-12 * s, 0 * s, 22 * s, -Math.PI / 2, Math.PI / 2, false);
-            bgCtx.lineTo(-42 * s, 22 * s);
-            bgCtx.arc(-42 * s, 11 * s, 11 * s, Math.PI / 2, Math.PI, false);
-            bgCtx.lineTo(-53 * s, 0 * s);
-            bgCtx.arc(-42 * s, 0 * s, 11 * s, Math.PI, Math.PI / 2, true);
-            bgCtx.lineTo(-12 * s, 11 * s);
-            bgCtx.arc(-12 * s, 0 * s, 11 * s, Math.PI / 2, -Math.PI / 2, true);
-            bgCtx.lineTo(-42 * s, -11 * s);
-            bgCtx.arc(-42 * s, 0 * s, 11 * s, -Math.PI / 2, -Math.PI, true);
-            bgCtx.lineTo(-53 * s, -11 * s);
-            bgCtx.arc(-42 * s, -11 * s, 11 * s, -Math.PI, -Math.PI / 2, false);
-            bgCtx.closePath();
-            bgCtx.fill();
-
-            bgCtx.restore();
-            bgCtx.restore();
-        }
-
-        function animationLoop() {
-            bgCtx.clearRect(0, 0, W, H);
-            phaseTimer++;
-
-            // Staubpartikel updaten & zeichnen
-            dust.forEach((d, index) => {
-                d.x += d.vx; d.y += d.vy;
-                if(d.ambient) {
-                    if (d.x < 0) d.x = W; if (d.x > W) d.x = 0;
-                    if (d.y < 0) d.y = H; if (d.y > H) d.y = 0;
-                } else {
-                    d.alpha -= d.decay;
-                    if (d.alpha <= 0) { dust.splice(index, 1); return; }
-                }
-                bgCtx.beginPath();
-                bgCtx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
-                bgCtx.fillStyle = d.color;
-                bgCtx.globalAlpha = d.alpha;
-                bgCtx.fill();
-                bgCtx.globalAlpha = 1;
-            });
-
-            // Shards zeichnen
-            SHARDS.forEach((s, index) => {
-                s.x += s.vx; s.y += s.vy;
-                s.rot += s.drot;
-                if(s.ambient) {
-                    if (s.x < -40) s.x = W + 40; if (s.x > W + 40) s.x = -40;
-                    if (s.y < -40) s.y = H + 40; if (s.y > H + 40) s.y = -40;
-                } else {
-                    s.vy += s.gravity * 0.1;
-                    s.life -= s.decay;
-                    if (s.life <= 0) { SHARDS.splice(index, 1); return; }
-                }
-
-                bgCtx.save();
-                bgCtx.translate(s.x, s.y);
-                bgCtx.rotate(s.rot);
-                bgCtx.beginPath();
-                bgCtx.moveTo(s.pts[0].x, s.pts[0].y);
-                for(let i = 1; i < s.pts.length; i++) bgCtx.lineTo(s.pts[i].x, s.pts[i].y);
-                bgCtx.closePath();
-                bgCtx.fillStyle = s.color;
-                bgCtx.globalAlpha = s.ambient ? 1 : s.life;
-                bgCtx.fill();
-                bgCtx.strokeStyle = `rgba(255,255,255,${s.ambient ? 0.05 : s.life * 0.3})`;
-                bgCtx.lineWidth = 1;
-                bgCtx.stroke();
-                bgCtx.restore();
-                bgCtx.globalAlpha = 1;
-            });
-
-            // Phasensteuerung
-            if (phase === 'intro') {
-                if (phaseTimer < 40) {
-                    drawBaseCoin(phaseTimer / 40);
-                } else {
-                    drawBaseCoin(1);
-                }
-                if (phaseTimer === 65) {
-                    phase = 'shatter';
-                    phaseTimer = 0;
-                    triggerShatterExplosion();
-                }
-            } 
-            else if (phase === 'shatter') {
-                // Druckwelle Kreis
-                if (phaseTimer < 12) {
-                    bgCtx.save();
-                    bgCtx.beginPath();
-                    bgCtx.arc(COIN_X, COIN_Y, phaseTimer * 45, 0, Math.PI * 2);
-                    bgCtx.fillStyle = `rgba(255, 102, 0, ${1 - (phaseTimer / 12)})`;
-                    bgCtx.fill();
-                    bgCtx.restore();
-                }
-
-                // Grobe fallende Münzbrocken
-                coins.forEach((c, index) => {
-                    c.x += c.vx; c.y += c.vy; c.vy += c.gravity;
-                    c.rot += c.drot;
-                    bgCtx.save();
-                    bgCtx.translate(c.x, c.y);
-                    bgCtx.rotate(c.rot);
-                    bgCtx.fillStyle = c.color;
-                    bgCtx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size);
-                    bgCtx.restore();
-                    
-                    if(c.y > H + 20) coins.splice(index, 1);
-                });
-
-                // Schnelle dünne Splitter
-                splinters.forEach((s, index) => {
-                    s.x += s.vx; s.y += s.vy; s.vy += s.gravity;
-                    s.rot += s.drot; s.alpha -= s.decay;
-                    if (s.alpha <= 0) { splinters.splice(index, 1); return; }
-                    bgCtx.save();
-                    bgCtx.translate(s.x, s.y);
-                    bgCtx.rotate(s.rot);
-                    bgCtx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
-                    bgCtx.fillRect(-s.l / 2, -s.w / 2, s.l, s.w);
-                    bgCtx.restore();
-                });
-
-                // Wenn Stücke größtenteils weg sind, bringe das Dashboard zum Vorschein
-                if (phaseTimer === 35) {
-                    document.getElementById('dashboard').classList.remove('hidden');
-                    document.getElementById('login-overlay').style.opacity = '0';
-                    setTimeout(() => {
-                        document.getElementById('login-overlay').classList.add('hidden');
-                    }, 500);
-                }
-
-                if (phaseTimer > 90) {
-                    phase = 'finished';
-                }
-            }
-
-            requestAnimationFrame(animationLoop);
-        }
-
-        // Starte unendliches Loop für Ambient Shards
-        animationLoop();
-
-        // Übernimm den Klick-Trigger des Login-Buttons sauber
-        document.getElementById('login-btn-trigger').addEventListener('click', () => {
-            const userIn = document.getElementById('username-input').value.trim();
-            if (userIn !== "") {
-                // Verstecke die Login-Box elegant vor dem Splittern
-                document.getElementById('login-container-card').style.opacity = '0';
-                document.getElementById('login-container-card').style.transform = 'scale(0.8)';
-                
-                // Triggere deine originale Login-Logik aus der script.js (Simuliere Klick auf das originale Element)
-                document.getElementById('username-input').value = userIn;
-                
-                // Starte die Münz-Shatter Sequenz
-                phase = 'intro';
-                phaseTimer = 0;
-                COIN_X = window.innerWidth / 2;
-                COIN_Y = window.innerHeight / 2;
-
-                // Führe nach kurzem Delay das originale Event aus script.js aus
-                setTimeout(() => {
-                    document.getElementById('login-btn').click();
-                }, 200);
-            } else {
-                alert("Please enter a valid Duino-Coin username.");
-            }
-        });
-    </script>
-
-    <script>
-        const overlay = document.getElementById('card-overlay');
-        const modal = document.createElement('div');
-        modal.id = 'card-modal';
-        modal.style.cssText = `
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%) scale(0.85);
-            width: min(680px, 90vw);
-            max-height: 80vh;
-            overflow-y: auto;
-            background: #0c0c0c;
-            border: 1px solid rgba(255,102,0,0.6);
-            border-radius: 20px;
-            padding: 28px;
-            z-index: 1500;
-            box-shadow: 0 0 80px rgba(255,102,0,0.5);
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        `;
-        document.body.appendChild(modal);
-
-        function openModal(card) {
-            modal.innerHTML = card.innerHTML;
-            modal.style.opacity = '1';
-            modal.style.pointerEvents = 'all';
-            modal.style.transform = 'translate(-50%, -50%) scale(1)';
-            overlay.classList.add('active');
-        }
-
-        function closeModal() {
-            modal.style.opacity = '0';
-            modal.style.transform = 'translate(-50%, -50%) scale(0.85)';
-            modal.style.pointerEvents = 'none';
-            overlay.classList.remove('active');
-        }
-
-        document.querySelectorAll('[data-expandable]').forEach(card => {
-            card.addEventListener('click', () => openModal(card));
-        });
-
-        overlay.addEventListener('click', closeModal);
-    </script>
-</body>
-</html>
+                rot: Math.
