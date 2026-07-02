@@ -17,6 +17,19 @@
             --text-muted: #888888;
             --border-color: #1a1a1a;
         }
+        body.light-mode {
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-color: #111111;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+        }
+        body.light-mode .card {
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        body, .card, #card-modal {
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -264,15 +277,13 @@
         .rgb-btn {
             background-color: #0a0a0a;
             color: #ffffff;
-            border: 4px solid #ff0000;
-            padding: 22px 45px;
-            font-size: 22px;
-            font-weight: 900;
+            border: 2px solid #ff0000;
+            padding: 10px 28px;
+            font-size: 13px;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 750px;
+            border-radius: 12px;
             display: inline-block;
             animation: rgbGlow 3s infinite linear;
             cursor: default;
@@ -305,7 +316,27 @@
     <div id="dashboard" class="container hidden">
         <div class="header">
             <h1>Duino-Coin <span id="user-display">@USER</span></h1>
+            <div style="display:flex;align-items:center;gap:12px;">
+                <!-- Light/Dark Toggle -->
+                <button id="theme-toggle" onclick="toggleTheme()" style="
+                    background:#1a1a1a;border:1px solid #333;color:#aaa;
+                    padding:6px 12px;border-radius:20px;cursor:pointer;
+                    font-size:13px;transition:all 0.2s;">🌙 Dark</button>
+                <!-- Language Selector -->
+                <select id="lang-select" onchange="setLang(this.value)" style="
+                    background:#1a1a1a;border:1px solid #333;color:#aaa;
+                    padding:6px 10px;border-radius:20px;cursor:pointer;
+                    font-size:13px;outline:none;">
+                    <option value="en">🇬🇧 EN</option>
+                    <option value="de">🇩🇪 DE</option>
+                    <option value="fr">🇫🇷 FR</option>
+                </select>
+            </div>
         </div>
+        <!-- Site Description -->
+        <p id="site-desc" style="color:#555;font-size:13px;margin:-16px 0 20px 0;line-height:1.6;">
+            A real-time Duino-Coin mining dashboard. Track your balance, hashrate, miners and market price — all in one place. This is an unofficial fan-made tool and is not affiliated with or endorsed by the Duino-Coin project.
+        </p>
 
         <div class="grid">
             <div class="card stat-card" data-expandable>
@@ -1020,7 +1051,7 @@
 
       // Shards: bereits ab der Explosion (shatter) sichtbar, danach im Drift
       // weiterhin (auch als Dashboard-Hintergrund-Partikel) sichtbar.
-      if(phase==='shatter'||phase==='drift'||phase==='done'){
+      if(phase==='flash'||phase==='shatter'||phase==='drift'||phase==='done'){
         SHARDS.forEach(s=>{
           s.x+=s.vx; s.y+=s.vy;
           s.vy+=s.gravity*.1;
@@ -1107,6 +1138,12 @@
 
       if(phase==='flash'){
         flashT+=dt*3.5;
+
+        // Shards sofort beim ersten Flash-Frame spawnen
+        if(flashT<=dt*3.5+0.01 && SHARDS.length===0){
+          spawnShards(CX,CY,R);
+        }
+
         ctx.save();
         ctx.translate((Math.random()-.5)*5,(Math.random()-.5)*5);
         drawCoin(CX,CY,R,1.4,1,0);
@@ -1117,7 +1154,6 @@
         if(flashT>=.42){
           phase='shatter'; shatterT=0;
           buildFrags(CX,CY,R);
-          spawnShards(CX,CY,R);
           playExplosion();
           const g=document.getElementById('login-greet');
           g.textContent=`Hey, ${userName}!`;
@@ -1209,6 +1245,63 @@
         });
 
         overlay.addEventListener('click', closeModal);
+
+        // ── LANGUAGE SYSTEM ──────────────────────────────────────────────────
+        const translations = {
+            en: {
+                balance: "Account Balance", miners: "Active Miners", hashrate: "Total Hashrate",
+                earnings: "Estimated Daily Earnings", milestone: "Next Milestone Progress",
+                hardware: "Hardware Breakdown", market: "Global DUCO Market Price",
+                chat: "Global Community Chat", chatinfo: "Connect with other Duino-Coin miners instantly.",
+                progress: "Progress", waiting: "Waiting for miners...", syncing: "Syncing...",
+                desc: "A real-time Duino-Coin mining dashboard. Track your balance, hashrate, miners and market price — all in one place. This is an unofficial fan-made tool and is not affiliated with or endorsed by the Duino-Coin project.",
+                donate: "Leave a Tip / Donations to leanderott",
+                rising: "Price Rising ▲", falling: "Price Falling ▼", stable: "Stable"
+            },
+            de: {
+                balance: "Kontostand", miners: "Aktive Miner", hashrate: "Gesamt-Hashrate",
+                earnings: "Geschätzter Tagesverdienst", milestone: "Nächstes Meilenstein-Ziel",
+                hardware: "Hardware-Übersicht", market: "Globaler DUCO Marktpreis",
+                chat: "Globaler Community-Chat", chatinfo: "Verbinde dich sofort mit anderen Duino-Coin Minern.",
+                progress: "Fortschritt", waiting: "Warte auf Miner...", syncing: "Synchronisierung...",
+                desc: "Ein Echtzeit-Dashboard für Duino-Coin Mining. Verfolge deinen Kontostand, Hashrate, Miner und Marktpreis — alles auf einen Blick. Dies ist ein inoffizielles Fan-Projekt und steht in keiner Verbindung zum offiziellen Duino-Coin Team.",
+                donate: "Trinkgeld / Spenden an leanderott",
+                rising: "Preis steigt ▲", falling: "Preis fällt ▼", stable: "Stabil"
+            },
+            fr: {
+                balance: "Solde du Compte", miners: "Mineurs Actifs", hashrate: "Hashrate Total",
+                earnings: "Gains Quotidiens Estimés", milestone: "Prochain Jalon",
+                hardware: "Aperçu du Matériel", market: "Prix Mondial du DUCO",
+                chat: "Chat Communautaire Global", chatinfo: "Connectez-vous instantanément avec d'autres mineurs.",
+                progress: "Progression", waiting: "En attente de mineurs...", syncing: "Synchronisation...",
+                desc: "Un tableau de bord en temps réel pour le minage Duino-Coin. Suivez votre solde, hashrate, mineurs et prix du marché. Ceci est un outil non officiel créé par un fan, sans affiliation avec le projet Duino-Coin.",
+                donate: "Laisser un pourboire / Dons à leanderott",
+                rising: "Prix en hausse ▲", falling: "Prix en baisse ▼", stable: "Stable"
+            }
+        };
+        let currentLang = 'en';
+
+        function setLang(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+            document.querySelector('[data-expandable]:nth-child(1) h3').textContent = t.balance;
+            document.querySelectorAll('.stat-card h3')[1].textContent = t.miners;
+            document.querySelectorAll('.stat-card h3')[2].textContent = t.hashrate;
+            document.querySelectorAll('.stat-card h3')[3].textContent = t.earnings;
+            document.querySelector('#next-milestone-val').closest('.card').querySelector('h3').textContent = t.milestone;
+            document.getElementById('site-desc').textContent = t.desc;
+            document.querySelector('.comment-section h3').textContent = t.chat;
+            document.querySelector('.chat-info').textContent = t.chatinfo;
+            document.querySelector('.milestone-info span').textContent = t.progress;
+            document.querySelector('.rgb-btn').textContent = t.donate;
+        }
+
+        // ── THEME TOGGLE ─────────────────────────────────────────────────────
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const btn = document.getElementById('theme-toggle');
+            btn.textContent = document.body.classList.contains('light-mode') ? '☀️ Light' : '🌙 Dark';
+        }
     </script>
 </body>
 </html>
