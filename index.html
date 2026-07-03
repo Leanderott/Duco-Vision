@@ -126,6 +126,13 @@
         }
 
         .ai-mascot:hover { animation: mascotWiggle 0.4s ease-in-out; }
+        @keyframes mascotThink {
+            0%, 100% { transform: translateY(0) rotate(-1deg); }
+            25% { transform: translateY(-3px) rotate(-3deg); }
+            75% { transform: translateY(-5px) rotate(1deg); }
+        }
+        .ai-mascot.thinking { animation: mascotThink 1s ease-in-out infinite !important; }
+
         @keyframes mascotWiggle {
             0%,100% { transform: rotate(0deg); }
             25% { transform: rotate(-12deg) scale(1.1); }
@@ -622,7 +629,7 @@
     <div id="login-overlay">
         <canvas id="login-canvas"></canvas>
         <div id="login-ui">
-            <div class="login-lbl">Duino Coin Network</div>
+            <div class="login-lbl">Duco-Vision</div>
             <div class="login-wrap">
                 <input id="login-name-input" type="text" placeholder="Dein Name..." autocomplete="off" spellcheck="false" maxlength="18"/>
                 <div class="login-glow"></div>
@@ -733,34 +740,7 @@
                 <div class="ai-mascot-wrap">
                     <!-- Chibi DUCO Mascot SVG -->
                     <div class="ai-mascot" title="DucoBOT" onclick="this.style.animation='none'; setTimeout(()=>this.style.animation='', 50)">
-                        <svg viewBox="0 0 64 80" xmlns="http://www.w3.org/2000/svg" width="64" height="80">
-                            <!-- Left arm -->
-                            <ellipse cx="8" cy="46" rx="6" ry="3.5" fill="#ff8800" transform="rotate(-30 8 46)"/>
-                            <!-- Right arm -->
-                            <ellipse cx="56" cy="46" rx="6" ry="3.5" fill="#ff8800" transform="rotate(30 56 46)"/>
-                            <!-- Left leg -->
-                            <rect x="20" y="66" width="8" height="12" rx="4" fill="#ff6600"/>
-                            <!-- Right leg -->
-                            <rect x="36" y="66" width="8" height="12" rx="4" fill="#ff6600"/>
-                            <!-- Body/Coin -->
-                            <circle cx="32" cy="42" r="22" fill="url(#coinGrad)"/>
-                            <circle cx="32" cy="42" r="22" fill="url(#coinShine)"/>
-                            <circle cx="32" cy="42" r="19" fill="none" stroke="rgba(255,200,80,0.4)" stroke-width="1.5"/>
-                            <!-- D letter -->
-                            <text x="32" y="48" font-family="Arial Black, sans-serif" font-weight="900" font-size="18" fill="rgba(140,55,0,0.6)" text-anchor="middle">D</text>
-                            <text x="32" y="47" font-family="Arial Black, sans-serif" font-weight="900" font-size="18" fill="rgba(255,255,255,0.95)" text-anchor="middle">D</text>
-                            <!-- Eyes -->
-                            <ellipse cx="25" cy="30" rx="4.5" ry="5" fill="white"/>
-                            <ellipse cx="39" cy="30" rx="4.5" ry="5" fill="white"/>
-                            <circle cx="26" cy="31" r="2.5" fill="#1a0a00"/>
-                            <circle cx="40" cy="31" r="2.5" fill="#1a0a00"/>
-                            <circle cx="27" cy="30" r="1" fill="white"/>
-                            <circle cx="41" cy="30" r="1" fill="white"/>
-                            <!-- Smile -->
-                            <path d="M26 38 Q32 43 38 38" stroke="#8b3a00" stroke-width="2" fill="none" stroke-linecap="round"/>
-                            <!-- Cheeks -->
-                            <ellipse cx="20" cy="37" rx="4" ry="2.5" fill="rgba(255,100,50,0.35)"/>
-                            <ellipse cx="44" cy="37" rx="4" ry="2.5" fill="rgba(255,100,50,0.35)"/>
+                        <svg id="ducobot-svg" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" width="70" height="90">
                             <defs>
                                 <radialGradient id="coinGrad" cx="40%" cy="35%">
                                     <stop offset="0%" stop-color="#fff8c0"/>
@@ -772,6 +752,83 @@
                                     <stop offset="0%" stop-color="rgba(255,255,255,0.5)"/>
                                     <stop offset="60%" stop-color="rgba(255,255,255,0)"/>
                                 </radialGradient>
+                            </defs>
+
+                            <!-- Jetpack flame left -->
+                            <ellipse id="flame-l" cx="22" cy="90" rx="5" ry="8" fill="url(#flameGrad)" opacity="0.9">
+                                <animate attributeName="ry" values="8;12;7;10;8" dur="0.3s" repeatCount="indefinite"/>
+                                <animate attributeName="opacity" values="0.9;0.6;1;0.7;0.9" dur="0.25s" repeatCount="indefinite"/>
+                            </ellipse>
+                            <!-- Jetpack flame right -->
+                            <ellipse id="flame-r" cx="58" cy="90" rx="5" ry="8" fill="url(#flameGrad)" opacity="0.9">
+                                <animate attributeName="ry" values="7;11;8;12;7" dur="0.28s" repeatCount="indefinite"/>
+                                <animate attributeName="opacity" values="0.7;1;0.6;0.9;0.7" dur="0.22s" repeatCount="indefinite"/>
+                            </ellipse>
+
+                            <!-- Jetpack left shoe -->
+                            <rect x="14" y="78" width="16" height="9" rx="4" fill="#333"/>
+                            <rect x="14" y="78" width="16" height="5" rx="3" fill="#555"/>
+                            <rect x="10" y="81" width="6" height="10" rx="3" fill="#222"/>
+                            <rect x="11" y="82" width="4" height="3" rx="1" fill="#ff6600"/>
+
+                            <!-- Jetpack right shoe -->
+                            <rect x="50" y="78" width="16" height="9" rx="4" fill="#333"/>
+                            <rect x="50" y="78" width="16" height="5" rx="3" fill="#555"/>
+                            <rect x="64" y="81" width="6" height="10" rx="3" fill="#222"/>
+                            <rect x="65" y="82" width="4" height="3" rx="1" fill="#ff6600"/>
+
+                            <!-- Left leg -->
+                            <rect x="24" y="66" width="8" height="16" rx="4" fill="#ff6600"/>
+                            <!-- Right leg -->
+                            <rect x="48" y="66" width="8" height="16" rx="4" fill="#ff6600"/>
+
+                            <!-- Left arm -->
+                            <ellipse cx="10" cy="52" rx="7" ry="4" fill="#ff8800" transform="rotate(-25 10 52)"/>
+                            <!-- Right arm -->
+                            <ellipse cx="70" cy="52" rx="7" ry="4" fill="#ff8800" transform="rotate(25 70 52)"/>
+
+                            <!-- Body/Coin -->
+                            <circle cx="40" cy="46" r="26" fill="url(#coinGrad)"/>
+                            <circle cx="40" cy="46" r="26" fill="url(#coinShine)"/>
+                            <circle cx="40" cy="46" r="23" fill="none" stroke="rgba(255,200,80,0.4)" stroke-width="1.5"/>
+                            <text x="40" y="54" font-family="Arial Black,sans-serif" font-weight="900" font-size="22" fill="rgba(140,55,0,0.5)" text-anchor="middle">D</text>
+                            <text x="40" y="53" font-family="Arial Black,sans-serif" font-weight="900" font-size="22" fill="rgba(255,255,255,0.95)" text-anchor="middle">D</text>
+
+                            <!-- Eyes (normal) -->
+                            <g id="eyes-normal">
+                                <ellipse cx="31" cy="33" rx="5" ry="5.5" fill="white"/>
+                                <ellipse cx="49" cy="33" rx="5" ry="5.5" fill="white"/>
+                                <circle cx="32" cy="34" r="3" fill="#1a0a00"/>
+                                <circle cx="50" cy="34" r="3" fill="#1a0a00"/>
+                                <circle cx="33" cy="33" r="1.2" fill="white"/>
+                                <circle cx="51" cy="33" r="1.2" fill="white"/>
+                            </g>
+
+                            <!-- Eyes thinking (hidden by default) -->
+                            <g id="eyes-thinking" opacity="0">
+                                <!-- squiggly thinking eyes -->
+                                <path d="M27 33 Q29 30 31 33 Q33 36 35 33" stroke="#1a0a00" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                                <path d="M45 33 Q47 30 49 33 Q51 36 53 33" stroke="#1a0a00" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                                <!-- thought dots -->
+                                <circle cx="58" cy="18" r="2" fill="white" opacity="0.9"/>
+                                <circle cx="63" cy="12" r="3" fill="white" opacity="0.9"/>
+                                <circle cx="70" cy="6" r="4" fill="white" opacity="0.9"/>
+                                <text x="70" y="9" font-size="5" text-anchor="middle" fill="#888">?</text>
+                            </g>
+
+                            <!-- Smile -->
+                            <path id="mascot-smile" d="M33 43 Q40 49 47 43" stroke="#8b3a00" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+                            <!-- Cheeks -->
+                            <ellipse cx="24" cy="41" rx="5" ry="3" fill="rgba(255,100,50,0.3)"/>
+                            <ellipse cx="56" cy="41" rx="5" ry="3" fill="rgba(255,100,50,0.3)"/>
+
+                            <defs>
+                                <linearGradient id="flameGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#ffffff"/>
+                                    <stop offset="30%" stop-color="#ffff00"/>
+                                    <stop offset="70%" stop-color="#ff6600"/>
+                                    <stop offset="100%" stop-color="rgba(255,0,0,0)"/>
+                                </linearGradient>
                             </defs>
                         </svg>
                     </div>
@@ -1744,21 +1801,36 @@
             messages.appendChild(loadDiv);
             messages.scrollTop = messages.scrollHeight;
 
+            // Mascot thinking mode
+            const mascot = document.querySelector('.ai-mascot');
+            const eyesNormal = document.getElementById('eyes-normal');
+            const eyesThinking = document.getElementById('eyes-thinking');
+            if (mascot) mascot.classList.add('thinking');
+            if (eyesNormal) eyesNormal.style.opacity = '0';
+            if (eyesThinking) eyesThinking.style.opacity = '1';
+
             aiChatHistory.push({ role: 'user', content: text });
 
             try {
-                const res = await fetch('https://api.anthropic.com/v1/messages', {
+                const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer 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',
+                        'HTTP-Referer': 'https://leanderott.github.io/Duco-Overview/',
+                        'X-Title': 'DUCO Overview'
+                    },
                     body: JSON.stringify({
-                        model: 'claude-sonnet-4-6',
+                        model: 'meta-llama/llama-3.1-8b-instruct:free',
                         max_tokens: 1000,
-                        system: DUCO_AI_SYSTEM,
-                        messages: aiChatHistory
+                        messages: [
+                            { role: 'system', content: DUCO_AI_SYSTEM },
+                            ...aiChatHistory
+                        ]
                     })
                 });
                 const data = await res.json();
-                const reply = data.content?.[0]?.text || 'Sorry, I could not get a response. 😕';
+                const reply = data.choices?.[0]?.message?.content || 'Sorry, I could not get a response. 😕';
                 aiChatHistory.push({ role: 'assistant', content: reply });
                 loadDiv.className = 'ai-chat-msg bot';
                 loadDiv.textContent = reply;
@@ -1766,6 +1838,11 @@
                 loadDiv.className = 'ai-chat-msg bot';
                 loadDiv.textContent = '❌ Connection error. Please try again.';
             }
+
+            // Stop thinking mode
+            if (mascot) mascot.classList.remove('thinking');
+            if (eyesNormal) eyesNormal.style.opacity = '1';
+            if (eyesThinking) eyesThinking.style.opacity = '0';
 
             messages.scrollTop = messages.scrollHeight;
             input.disabled = false;
