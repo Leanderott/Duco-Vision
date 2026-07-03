@@ -44,6 +44,303 @@
         body.light-mode #card-modal h3 {
             color: #666666 !important;
         }
+
+        /* ── AI SECTION ─────────────────────────────────── */
+        .ai-section {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .ai-section .card {
+            overflow: visible;
+        }
+
+        .ai-section-title {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #ai-chat-messages {
+            height: 280px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-right: 4px;
+            scrollbar-width: thin;
+            scrollbar-color: #333 transparent;
+        }
+
+        .ai-chat-msg {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .ai-chat-msg.user {
+            background: linear-gradient(135deg, #ff6600, #ff3300);
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .ai-chat-msg.bot {
+            background: #161616;
+            color: #ddd;
+            align-self: flex-start;
+            border: 1px solid #222;
+            border-bottom-left-radius: 4px;
+        }
+        .ai-chat-msg.bot.loading { color: #555; font-style: italic; }
+        body.light-mode .ai-chat-msg.bot { background: #f0f0f0; color: #222; border-color: #ddd; }
+
+        /* Mascot */
+        .ai-mascot-wrap {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+        }
+
+        .ai-mascot {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0;
+            margin-bottom: -8px;
+            animation: mascotBob 2.5s ease-in-out infinite;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        @keyframes mascotBob {
+            0%, 100% { transform: translateY(0) rotate(-2deg); }
+            50% { transform: translateY(-6px) rotate(2deg); }
+        }
+
+        .ai-mascot:hover { animation: mascotWiggle 0.4s ease-in-out; }
+        @keyframes mascotWiggle {
+            0%,100% { transform: rotate(0deg); }
+            25% { transform: rotate(-12deg) scale(1.1); }
+            75% { transform: rotate(12deg) scale(1.1); }
+        }
+
+        /* Input area */
+        .ai-input-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .ai-input-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        #ai-chat-input {
+            flex: 1;
+            background: #111;
+            border: 1px solid #2a2a2a;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 14px;
+            padding: 11px 16px;
+            outline: none;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        #ai-chat-input:focus { border-color: #ff6600; }
+        body.light-mode #ai-chat-input { background: #f0f0f0; border-color: #ddd; color: #111; }
+
+        #ai-chat-send {
+            background: linear-gradient(135deg, #ff6600, #ff3300);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 11px 18px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            white-space: nowrap;
+            width: auto;
+        }
+        #ai-chat-send:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(255,102,0,0.4); }
+
+        /* Rainbow glow strip */
+        .ai-rainbow-bar {
+            height: 3px;
+            border-radius: 0 0 14px 14px;
+            margin-top: 6px;
+            background: linear-gradient(90deg,
+                #ff0000, #ff7700, #ffff00, #00ff00,
+                #00ffff, #0077ff, #aa00ff, #ff0055,
+                #ff0000);
+            background-size: 200% 100%;
+            animation: rainbowFlow 3s linear infinite;
+            opacity: 0.85;
+        }
+
+        @keyframes rainbowFlow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        /* AI Chat */
+        #ai-fab {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6600, #ff3300);
+            border: none;
+            cursor: pointer;
+            z-index: 800;
+            box-shadow: 0 0 20px rgba(255,102,0,0.5);
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #ai-fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255,102,0,0.7);
+        }
+        #ai-panel {
+            position: fixed;
+            bottom: 96px;
+            right: 28px;
+            width: min(380px, 92vw);
+            height: 500px;
+            background: #0c0c0c;
+            border: 1px solid rgba(255,102,0,0.4);
+            border-radius: 20px;
+            z-index: 800;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(255,102,0,0.3);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #ai-panel.open {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateY(0) scale(1);
+        }
+        #ai-panel-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #0a0a0a;
+        }
+        #ai-panel-header span { font-size: 13px; color: #aaa; flex: 1; }
+        #ai-panel-header strong { color: #ff6600; font-size: 14px; }
+        #ai-close {
+            background: none;
+            border: none;
+            color: #555;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            width: auto;
+            line-height: 1;
+        }
+        #ai-close:hover { color: #fff; }
+        #ai-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: #333 transparent;
+        }
+        .ai-msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .ai-msg.user {
+            background: linear-gradient(135deg, #ff6600, #ff4400);
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .ai-msg.bot {
+            background: #161616;
+            color: #ddd;
+            align-self: flex-start;
+            border: 1px solid #222;
+            border-bottom-left-radius: 4px;
+        }
+        .ai-msg.bot.loading { color: #555; font-style: italic; }
+        #ai-input-row {
+            padding: 12px;
+            border-top: 1px solid #1a1a1a;
+            display: flex;
+            gap: 8px;
+            background: #0a0a0a;
+        }
+        #ai-input {
+            flex: 1;
+            background: #161616;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 13px;
+            padding: 9px 14px;
+            outline: none;
+            font-family: inherit;
+        }
+        #ai-input:focus { border-color: #ff6600; }
+        #ai-send {
+            background: #ff6600;
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            width: 38px;
+            height: 38px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            width: auto;
+            padding: 0 14px;
+            font-size: 13px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        #ai-send:hover { background: #e05500; }
+        body.light-mode #ai-panel {
+            background: #fff;
+            border-color: rgba(255,102,0,0.3);
+        }
+        body.light-mode #ai-panel-header { background: #f8f8f8; border-color: #eee; }
+        body.light-mode #ai-input-row { background: #f8f8f8; border-color: #eee; }
+        body.light-mode #ai-input { background: #f0f0f0; border-color: #ddd; color: #111; }
+        body.light-mode .ai-msg.bot { background: #f0f0f0; color: #222; border-color: #ddd; }
         body.light-mode #card-modal {
             background: #ffffff !important;
             color: #111111 !important;
@@ -426,6 +723,69 @@
             </div>
         </div>
 
+        <!-- AI SECTION -->
+        <div class="ai-section">
+            <div class="card" style="overflow:visible;">
+                <h3 class="ai-section-title">🤖 DUCO AI Assistant</h3>
+                <div id="ai-chat-messages">
+                    <div class="ai-chat-msg bot">Hey! I'm DucoBOT 🪙 Ask me anything about Duino-Coin — mining, hardware, wallets, the Kolka system, pools and more!</div>
+                </div>
+                <div class="ai-mascot-wrap">
+                    <!-- Chibi DUCO Mascot SVG -->
+                    <div class="ai-mascot" title="DucoBOT" onclick="this.style.animation='none'; setTimeout(()=>this.style.animation='', 50)">
+                        <svg viewBox="0 0 64 80" xmlns="http://www.w3.org/2000/svg" width="64" height="80">
+                            <!-- Left arm -->
+                            <ellipse cx="8" cy="46" rx="6" ry="3.5" fill="#ff8800" transform="rotate(-30 8 46)"/>
+                            <!-- Right arm -->
+                            <ellipse cx="56" cy="46" rx="6" ry="3.5" fill="#ff8800" transform="rotate(30 56 46)"/>
+                            <!-- Left leg -->
+                            <rect x="20" y="66" width="8" height="12" rx="4" fill="#ff6600"/>
+                            <!-- Right leg -->
+                            <rect x="36" y="66" width="8" height="12" rx="4" fill="#ff6600"/>
+                            <!-- Body/Coin -->
+                            <circle cx="32" cy="42" r="22" fill="url(#coinGrad)"/>
+                            <circle cx="32" cy="42" r="22" fill="url(#coinShine)"/>
+                            <circle cx="32" cy="42" r="19" fill="none" stroke="rgba(255,200,80,0.4)" stroke-width="1.5"/>
+                            <!-- D letter -->
+                            <text x="32" y="48" font-family="Arial Black, sans-serif" font-weight="900" font-size="18" fill="rgba(140,55,0,0.6)" text-anchor="middle">D</text>
+                            <text x="32" y="47" font-family="Arial Black, sans-serif" font-weight="900" font-size="18" fill="rgba(255,255,255,0.95)" text-anchor="middle">D</text>
+                            <!-- Eyes -->
+                            <ellipse cx="25" cy="30" rx="4.5" ry="5" fill="white"/>
+                            <ellipse cx="39" cy="30" rx="4.5" ry="5" fill="white"/>
+                            <circle cx="26" cy="31" r="2.5" fill="#1a0a00"/>
+                            <circle cx="40" cy="31" r="2.5" fill="#1a0a00"/>
+                            <circle cx="27" cy="30" r="1" fill="white"/>
+                            <circle cx="41" cy="30" r="1" fill="white"/>
+                            <!-- Smile -->
+                            <path d="M26 38 Q32 43 38 38" stroke="#8b3a00" stroke-width="2" fill="none" stroke-linecap="round"/>
+                            <!-- Cheeks -->
+                            <ellipse cx="20" cy="37" rx="4" ry="2.5" fill="rgba(255,100,50,0.35)"/>
+                            <ellipse cx="44" cy="37" rx="4" ry="2.5" fill="rgba(255,100,50,0.35)"/>
+                            <defs>
+                                <radialGradient id="coinGrad" cx="40%" cy="35%">
+                                    <stop offset="0%" stop-color="#fff8c0"/>
+                                    <stop offset="30%" stop-color="#ffd040"/>
+                                    <stop offset="70%" stop-color="#ff7700"/>
+                                    <stop offset="100%" stop-color="#cc4400"/>
+                                </radialGradient>
+                                <radialGradient id="coinShine" cx="30%" cy="25%">
+                                    <stop offset="0%" stop-color="rgba(255,255,255,0.5)"/>
+                                    <stop offset="60%" stop-color="rgba(255,255,255,0)"/>
+                                </radialGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="ai-input-area">
+                        <div class="ai-input-row">
+                            <input id="ai-chat-input" type="text" placeholder="Ask about Duino-Coin..." autocomplete="off"/>
+                            <button id="ai-chat-send" onclick="sendAIChat()">Send ➤</button>
+                        </div>
+                        <div class="ai-rainbow-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="donation-card">
             <div class="rgb-btn">Leave a Tip / Donations to leanderott</div>
         </div>
@@ -444,6 +804,23 @@
                     scrolling="auto"
                     style="border-radius: 12px; background: #080808;"></iframe>
         </section>
+    </div>
+
+    <!-- AI Chat FAB -->
+    <button id="ai-fab" onclick="toggleAI()" title="Ask AI about Duino-Coin">🤖</button>
+
+    <div id="ai-panel">
+        <div id="ai-panel-header">
+            <span>🤖 <strong>DUCO AI</strong> — Ask anything about Duino-Coin</span>
+            <button id="ai-close" onclick="toggleAI()">✕</button>
+        </div>
+        <div id="ai-messages">
+            <div class="ai-msg bot">Hey! I'm your Duino-Coin assistant. Ask me anything about mining, wallets, the DUCO coin, or how this dashboard works!</div>
+        </div>
+        <div id="ai-input-row">
+            <input id="ai-input" type="text" placeholder="Ask about Duino-Coin..." autocomplete="off" />
+            <button id="ai-send" onclick="sendAI()">Send</button>
+        </div>
     </div>
 
     <div id="achievement-popup">
@@ -1275,6 +1652,130 @@
         });
 
         overlay.addEventListener('click', closeModal);
+
+        // ── AI CHAT ──────────────────────────────────────────────────────────
+        function toggleAI() {
+            document.getElementById('ai-panel').classList.toggle('open');
+            document.getElementById('ai-input').focus();
+        }
+
+        const aiHistory = [];
+        const AI_SYSTEM = `You are a helpful Duino-Coin expert assistant embedded in an unofficial fan-made mining dashboard. Answer questions about Duino-Coin (DUCO) — mining, wallets, hardware (ESP32, Arduino, Raspberry Pi Pico, PC), the Kolka reward system, exchanges, the DUCO-S1 algorithm, pools, and the community. Be concise and friendly. If asked about unrelated topics, politely redirect to Duino-Coin. This dashboard is not affiliated with the official Duino-Coin project.`;
+
+        async function sendAI() {
+            const input = document.getElementById('ai-input');
+            const messages = document.getElementById('ai-messages');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            input.disabled = true;
+            document.getElementById('ai-send').disabled = true;
+
+            // User message
+            const userDiv = document.createElement('div');
+            userDiv.className = 'ai-msg user';
+            userDiv.textContent = text;
+            messages.appendChild(userDiv);
+
+            // Loading
+            const loadDiv = document.createElement('div');
+            loadDiv.className = 'ai-msg bot loading';
+            loadDiv.textContent = 'Thinking...';
+            messages.appendChild(loadDiv);
+            messages.scrollTop = messages.scrollHeight;
+
+            aiHistory.push({ role: 'user', content: text });
+
+            try {
+                const res = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-6',
+                        max_tokens: 1000,
+                        system: AI_SYSTEM,
+                        messages: aiHistory
+                    })
+                });
+                const data = await res.json();
+                const reply = data.content?.[0]?.text || 'Sorry, I could not get a response.';
+                aiHistory.push({ role: 'assistant', content: reply });
+
+                loadDiv.className = 'ai-msg bot';
+                loadDiv.textContent = reply;
+            } catch(e) {
+                loadDiv.className = 'ai-msg bot';
+                loadDiv.textContent = 'Connection error. Please try again.';
+            }
+
+            messages.scrollTop = messages.scrollHeight;
+            input.disabled = false;
+            document.getElementById('ai-send').disabled = false;
+            input.focus();
+        }
+
+        document.getElementById('ai-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') sendAI();
+        });
+
+        // ── AI CHAT ──────────────────────────────────────────────────────────
+        const aiChatHistory = [];
+        const DUCO_AI_SYSTEM = `You are DucoBOT, a friendly and knowledgeable Duino-Coin expert assistant. You are embedded in an unofficial fan-made Duino-Coin mining dashboard called DUCO Overview. Answer questions about Duino-Coin (DUCO) — including mining, the DUCO-S1 and DUCO-S1A algorithms, hardware (ESP32, Arduino AVR, Raspberry Pi Pico, PC CPU mining), the Kolka reward system, wallets, exchanges, pools, the community, and the official apps. Be concise, friendly and helpful. Use occasional emojis. If asked about unrelated topics, politely redirect to Duino-Coin topics. Never claim to be affiliated with the official Duino-Coin project.`;
+
+        async function sendAIChat() {
+            const input = document.getElementById('ai-chat-input');
+            const messages = document.getElementById('ai-chat-messages');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            input.disabled = true;
+            document.getElementById('ai-chat-send').disabled = true;
+
+            const userDiv = document.createElement('div');
+            userDiv.className = 'ai-chat-msg user';
+            userDiv.textContent = text;
+            messages.appendChild(userDiv);
+
+            const loadDiv = document.createElement('div');
+            loadDiv.className = 'ai-chat-msg bot loading';
+            loadDiv.textContent = '🪙 Thinking...';
+            messages.appendChild(loadDiv);
+            messages.scrollTop = messages.scrollHeight;
+
+            aiChatHistory.push({ role: 'user', content: text });
+
+            try {
+                const res = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-6',
+                        max_tokens: 1000,
+                        system: DUCO_AI_SYSTEM,
+                        messages: aiChatHistory
+                    })
+                });
+                const data = await res.json();
+                const reply = data.content?.[0]?.text || 'Sorry, I could not get a response. 😕';
+                aiChatHistory.push({ role: 'assistant', content: reply });
+                loadDiv.className = 'ai-chat-msg bot';
+                loadDiv.textContent = reply;
+            } catch(e) {
+                loadDiv.className = 'ai-chat-msg bot';
+                loadDiv.textContent = '❌ Connection error. Please try again.';
+            }
+
+            messages.scrollTop = messages.scrollHeight;
+            input.disabled = false;
+            document.getElementById('ai-chat-send').disabled = false;
+            input.focus();
+        }
+
+        document.getElementById('ai-chat-input')?.addEventListener('keydown', e => {
+            if (e.key === 'Enter') sendAIChat();
+        });
 
         // ── LANGUAGE SYSTEM ──────────────────────────────────────────────────
         const translations = {
