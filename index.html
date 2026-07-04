@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Duco-Overview Dashboard</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://js.puter.com/v2/"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <style>
@@ -1812,20 +1813,11 @@
             aiChatHistory.push({ role: 'user', content: text });
 
             try {
-                const res = await fetch('https://hard-pike-8021.ducovisionworker.deno.net', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: 'meta-llama/llama-3.1-8b-instruct:free',
-                        max_tokens: 1000,
-                        messages: [
-                            { role: 'system', content: DUCO_AI_SYSTEM },
-                            ...aiChatHistory
-                        ]
-                    })
-                });
-                const data = await res.json();
-                const reply = data.choices?.[0]?.message?.content || 'Sorry, I could not get a response. 😕';
+                const response = await puter.ai.chat([
+                    { role: 'system', content: DUCO_AI_SYSTEM },
+                    ...aiChatHistory
+                ], { model: 'meta-llama/llama-3.3-70b:free' });
+                const reply = response?.message?.content || response?.text || String(response) || 'Sorry, I could not get a response. 😕';
                 aiChatHistory.push({ role: 'assistant', content: reply });
                 loadDiv.className = 'ai-chat-msg bot';
                 loadDiv.textContent = reply;
