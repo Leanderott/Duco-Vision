@@ -1824,7 +1824,7 @@
                         'X-Title': 'Duco-Vision'
                     },
                     body: JSON.stringify({
-                        model: 'meta-llama/llama-3.3-70b:free',
+                        model: 'deepseek/deepseek-r1:free',
                         max_tokens: 800,
                         messages: [{ role: 'system', content: DUCO_AI_SYSTEM }, ...aiChatHistory]
                     })
@@ -1835,8 +1835,9 @@
                 loadDiv.className = 'ai-chat-msg bot';
                 loadDiv.textContent = reply;
             } catch(e) {
+                console.error('AI Error:', e);
                 loadDiv.className = 'ai-chat-msg bot';
-                loadDiv.textContent = '❌ Connection error. Please try again.';
+                loadDiv.textContent = '❌ Error: ' + e.message;
             }
 
             // Stop thinking mode
