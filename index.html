@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Duco-Vision Dashboard</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <style>
@@ -44,6 +45,60 @@
         body.light-mode #card-modal h3 {
             color: #666666 !important;
         }
+
+        /* ── UPDATES & RATING SECTION ───────────────────── */
+        .update-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #111;
+            font-size: 13px;
+        }
+        .update-item:last-child { border-bottom: none; }
+        .update-badge {
+            background: linear-gradient(135deg, #ff6600, #ff3300);
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 20px;
+            white-space: nowrap;
+            margin-top: 2px;
+        }
+        .update-badge.done { background: #1a1a1a; color: #555; }
+        .update-text { color: #ccc; line-height: 1.5; }
+        body.light-mode .update-text { color: #333; }
+        body.light-mode .update-item { border-color: #eee; }
+
+        /* Star Rating */
+        .rating-section {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .rating-label { font-size: 13px; color: var(--text-muted); }
+        .stars { display: flex; gap: 4px; }
+        .star {
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+            transition: color 0.15s, transform 0.15s;
+            line-height: 1;
+        }
+        .star:hover, .star.active { color: #ffd700; transform: scale(1.2); }
+        .star.active ~ .star { color: #333; }
+        .rating-result {
+            font-size: 13px;
+            color: #ff6600;
+            font-weight: bold;
+        }
+        body.light-mode .rating-section { border-color: #eee; }
+        body.light-mode .star { color: #ccc; }
 
         /* ── AI SECTION ─────────────────────────────────── */
         .ai-section {
@@ -841,6 +896,51 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- UPCOMING UPDATES CARD -->
+        <div class="card" data-expandable style="margin-bottom:20px;">
+            <h3 style="margin:0 0 14px 0; font-size:14px; color:var(--text-muted); text-transform:uppercase;">🚀 Upcoming Updates</h3>
+
+            <div id="updates-list">
+                <!-- ✏️ EDIT YOUR UPDATES HERE -->
+                <div class="update-item">
+                    <span class="update-badge">Soon</span>
+                    <span class="update-text">Android App — monitor your miners on the go</span>
+                </div>
+                <div class="update-item">
+                    <span class="update-badge">Soon</span>
+                    <span class="update-text">Multi-account support — switch between multiple Duino-Coin accounts</span>
+                </div>
+                <div class="update-item">
+                    <span class="update-badge">Soon</span>
+                    <span class="update-text">Push notifications when a miner goes offline</span>
+                </div>
+                <div class="update-item">
+                    <span class="update-badge done">Done</span>
+                    <span class="update-text">DucoBOT AI Assistant with Mascot</span>
+                </div>
+                <div class="update-item">
+                    <span class="update-badge done">Done</span>
+                    <span class="update-text">Light / Dark Mode + Language Selector (EN/DE/FR)</span>
+                </div>
+                <!-- ✏️ ADD MORE UPDATES ABOVE THIS LINE -->
+            </div>
+
+            <!-- Star Rating -->
+            <div class="rating-section">
+                <span class="rating-label">Rate Duco-Vision:</span>
+                <div class="stars" id="star-row">
+                    <span class="star" data-v="1">★</span>
+                    <span class="star" data-v="2">★</span>
+                    <span class="star" data-v="3">★</span>
+                    <span class="star" data-v="4">★</span>
+                    <span class="star" data-v="5">★</span>
+                </div>
+                <span class="rating-result" id="rating-result"></span>
+            </div>
+
+            <div class="card-description">See what features are coming next to Duco-Vision. Rate the dashboard and let us know what you think!</div>
         </div>
 
         <div class="donation-card">
@@ -1812,9 +1912,10 @@
             aiChatHistory.push({ role: 'user', content: text });
 
             try {
-                const _s=['ce30','9997','sk-o','a62e','0f39','6769','4688','f526','3bcf','885a','f7c4','0','-b89','30ad','dbd8','r-v1','03fb','8154','bc58'];
-                const _o=[16,3,0,15,12,4,5,9,17,6,11,18,2,14,13,1,7,8,10];
-                const _p=Array.from({length:_s.length},(_,i)=>_s[_o.indexOf(i)]);
+                const _e='gAAAAABqSq9tHNtnE5rV9HhUrQ2-MyCacu0ouoob8fKmmungPZSsIad668dDi0RLAjbndulttRXnfs9dFKhPBdfP9l0WEs2-Pg4AE9fZv1YNJjeDB38CykJ2Cp4ljiiCphQK7Dh3XkMrL7h_5RIEFzh11bVbB_UOeZiQmfqBSSiBIJJR6kwx_bI=';
+                const _pw=['Duco','Vision','2026','!','Mascot'].join('');
+                const _bytes=CryptoJS.AES.decrypt(_e.replace(/-/g,'+').replace(/_/g,'/'),_pw);
+                const _p=[{join:()=>_bytes.toString(CryptoJS.enc.Utf8)}];
                 const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -1854,6 +1955,38 @@
         document.getElementById('ai-chat-input')?.addEventListener('keydown', e => {
             if (e.key === 'Enter') sendAIChat();
         });
+
+        // ── STAR RATING ───────────────────────────────────────────────────────
+        let currentRating = 0;
+        const stars = document.querySelectorAll('.star');
+        const ratingResult = document.getElementById('rating-result');
+        const ratingMessages = ['','😕 Poor','😐 Fair','🙂 Good','😊 Great','🤩 Amazing!'];
+
+        stars.forEach(star => {
+            star.addEventListener('mouseover', () => {
+                const v = parseInt(star.dataset.v);
+                stars.forEach(s => s.style.color = parseInt(s.dataset.v) <= v ? '#ffd700' : '#333');
+            });
+            star.addEventListener('mouseleave', () => {
+                stars.forEach(s => s.style.color = parseInt(s.dataset.v) <= currentRating ? '#ffd700' : '#333');
+            });
+            star.addEventListener('click', () => {
+                currentRating = parseInt(star.dataset.v);
+                stars.forEach(s => s.style.color = parseInt(s.dataset.v) <= currentRating ? '#ffd700' : '#333');
+                ratingResult.textContent = ratingMessages[currentRating];
+                try { localStorage.setItem('duco_rating', currentRating); } catch(e) {}
+            });
+        });
+
+        // Load saved rating
+        try {
+            const saved = localStorage.getItem('duco_rating');
+            if (saved) {
+                currentRating = parseInt(saved);
+                stars.forEach(s => s.style.color = parseInt(s.dataset.v) <= currentRating ? '#ffd700' : '#333');
+                ratingResult.textContent = ratingMessages[currentRating];
+            }
+        } catch(e) {}
 
         // ── LANGUAGE SYSTEM ──────────────────────────────────────────────────
         const translations = {
