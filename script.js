@@ -239,16 +239,18 @@ function fetchUserData() {
                     const sharetime = parseFloat(miner.sharetime) || 1;
                     const diff = parseFloat(miner.diff) || 0;
                     const wd = parseFloat(miner.wd) || 0;
-                    formulaEarnings += (86400 / sharetime) * (wd / 10067237);
+                    // Unified formula: wd for ESP32, diff/2 for AVR, calibrated to ~22 DUCO/day
+                    const rawVal = wd > 0 ? wd / sharetime : diff / (sharetime * 2);
+                    formulaEarnings += rawVal * 86400 / 4167470;
 
                     const software = miner.software || "Unknown Device";
                     hardwareCounts[software] = (hardwareCounts[software] || 0) + 1;
                 });
 
-                // Balance-Delta Berechnung
+                // Balance-Delta Berechnung (wie offizielle Wallet)
                 const now = Date.now();
                 balanceHistory.push({ balance: userBalance, time: now });
-                if (balanceHistory.length > 60) balanceHistory.shift();
+                if (balanceHistory.length > 120) balanceHistory.shift(); // max 20 min history
 
                 let deltaWorked = false;
                 if (balanceHistory.length >= 2) {
@@ -256,12 +258,14 @@ function fetchUserData() {
                     const newest = balanceHistory[balanceHistory.length - 1];
                     const elapsedSeconds = (newest.time - oldest.time) / 1000;
                     const balanceDelta = newest.balance - oldest.balance;
-                    if (elapsedSeconds > 0 && balanceDelta >= 0.000001) {
+                    // Nur verwenden wenn mindestens 30 Sekunden gemessen und Balance gestiegen
+                    if (elapsedSeconds >= 30 && balanceDelta > 0) {
                         calculatedDailyDuco = (balanceDelta / elapsedSeconds) * 86400;
                         deltaWorked = true;
                     }
                 }
 
+                // Formel als Fallback bis genug Daten gesammelt sind
                 if (!deltaWorked && formulaEarnings > 0) {
                     calculatedDailyDuco = formulaEarnings;
                 }
