@@ -1,146 +1,2048 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Duco-Vision Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        :root {
+            --bg-color: #050505;
+            --card-bg: #0c0c0c;
+            --accent-color: #ff6600;
+            --text-color: #ffffff;
+            --text-muted: #888888;
+            --border-color: #1a1a1a;
+        }
+        body.light-mode {
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-color: #111111;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+        }
+        body.light-mode .card {
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        body.light-mode #card-modal {
+            background: #ffffff !important;
+            color: #111111 !important;
+            border-color: rgba(255,102,0,0.4) !important;
+        }
+        body.light-mode #card-modal h3,
+        body.light-mode #card-modal .value,
+        body.light-mode #card-modal strong {
+            color: #111111 !important;
+        }
+        body.light-mode #card-modal .card-description {
+            color: #444444 !important;
+        }
+        body.light-mode #card-modal .currency,
+        body.light-mode #card-modal h3 {
+            color: #666666 !important;
+        }
+
+        /* ── UPDATES & RATING SECTION ───────────────────── */
+        .update-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #111;
+            font-size: 13px;
+        }
+        .update-item:last-child { border-bottom: none; }
+        .update-badge {
+            background: linear-gradient(135deg, #ff6600, #ff3300);
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 20px;
+            white-space: nowrap;
+            margin-top: 2px;
+        }
+        .update-badge.done { background: #1a1a1a; color: #555; }
+        .update-text { color: #ccc; line-height: 1.5; }
+        body.light-mode .update-text { color: #333; }
+        body.light-mode .update-item { border-color: #eee; }
+
+        /* Star Rating */
+        .rating-section {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .rating-label { font-size: 13px; color: var(--text-muted); }
+        .stars { display: flex; gap: 4px; }
+        .star {
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+            transition: color 0.15s, transform 0.15s;
+            line-height: 1;
+        }
+        .star:hover, .star.active { color: #ffd700; transform: scale(1.2); }
+        .star.active ~ .star { color: #333; }
+        .rating-result {
+            font-size: 13px;
+            color: #ff6600;
+            font-weight: bold;
+        }
+        body.light-mode .rating-section { border-color: #eee; }
+        body.light-mode .star { color: #ccc; }
+
+        /* ── AI SECTION ─────────────────────────────────── */
+        .ai-section {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .ai-section .card {
+            overflow: visible;
+        }
+
+        .ai-section-title {
+            font-size: 14px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 0 16px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #ai-chat-messages {
+            height: 280px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-right: 4px;
+            scrollbar-width: thin;
+            scrollbar-color: #333 transparent;
+        }
+
+        .ai-chat-msg {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .ai-chat-msg.user {
+            background: linear-gradient(135deg, #ff6600, #ff3300);
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .ai-chat-msg.bot {
+            background: #161616;
+            color: #ddd;
+            align-self: flex-start;
+            border: 1px solid #222;
+            border-bottom-left-radius: 4px;
+        }
+        .ai-chat-msg.bot.loading { color: #555; font-style: italic; }
+        body.light-mode .ai-chat-msg.bot { background: #f0f0f0; color: #222; border-color: #ddd; }
+
+        /* Mascot */
+        .ai-mascot-wrap {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+        }
+
+        .ai-mascot {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0;
+            margin-bottom: -8px;
+            animation: mascotBob 2.5s ease-in-out infinite;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        @keyframes mascotBob {
+            0%, 100% { transform: translateY(0) rotate(-2deg); }
+            50% { transform: translateY(-6px) rotate(2deg); }
+        }
+
+        .ai-mascot:hover { animation: mascotWiggle 0.4s ease-in-out; }
+        @keyframes mascotThink {
+            0%, 100% { transform: translateY(0) rotate(-1deg); }
+            25% { transform: translateY(-3px) rotate(-3deg); }
+            75% { transform: translateY(-5px) rotate(1deg); }
+        }
+        .ai-mascot.thinking { animation: mascotThink 1s ease-in-out infinite !important; }
+
+        @keyframes mascotWiggle {
+            0%,100% { transform: rotate(0deg); }
+            25% { transform: rotate(-12deg) scale(1.1); }
+            75% { transform: rotate(12deg) scale(1.1); }
+        }
+
+        /* Input area */
+        .ai-input-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .ai-input-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        #ai-chat-input {
+            flex: 1;
+            background: #111;
+            border: 1px solid #2a2a2a;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 14px;
+            padding: 11px 16px;
+            outline: none;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        #ai-chat-input:focus { border-color: #ff6600; }
+        body.light-mode #ai-chat-input { background: #f0f0f0; border-color: #ddd; color: #111; }
+
+        #ai-chat-send {
+            background: linear-gradient(135deg, #ff6600, #ff3300);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+            padding: 11px 18px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            white-space: nowrap;
+            width: auto;
+        }
+        #ai-chat-send:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(255,102,0,0.4); }
+
+        /* Rainbow glow strip */
+        .ai-rainbow-bar {
+            height: 3px;
+            border-radius: 0 0 14px 14px;
+            margin-top: 6px;
+            background: linear-gradient(90deg,
+                #ff0000, #ff7700, #ffff00, #00ff00,
+                #00ffff, #0077ff, #aa00ff, #ff0055,
+                #ff0000);
+            background-size: 200% 100%;
+            animation: rainbowFlow 3s linear infinite;
+            opacity: 0.85;
+        }
+
+        @keyframes rainbowFlow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 0%; }
+        }
+
+        /* AI Chat */
+        #ai-fab {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff6600, #ff3300);
+            border: none;
+            cursor: pointer;
+            z-index: 800;
+            box-shadow: 0 0 20px rgba(255,102,0,0.5);
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        #ai-fab:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(255,102,0,0.7);
+        }
+        #ai-panel {
+            position: fixed;
+            bottom: 96px;
+            right: 28px;
+            width: min(380px, 92vw);
+            height: 500px;
+            background: #0c0c0c;
+            border: 1px solid rgba(255,102,0,0.4);
+            border-radius: 20px;
+            z-index: 800;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(255,102,0,0.3);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #ai-panel.open {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateY(0) scale(1);
+        }
+        #ai-panel-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #0a0a0a;
+        }
+        #ai-panel-header span { font-size: 13px; color: #aaa; flex: 1; }
+        #ai-panel-header strong { color: #ff6600; font-size: 14px; }
+        #ai-close {
+            background: none;
+            border: none;
+            color: #555;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            width: auto;
+            line-height: 1;
+        }
+        #ai-close:hover { color: #fff; }
+        #ai-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: #333 transparent;
+        }
+        .ai-msg {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .ai-msg.user {
+            background: linear-gradient(135deg, #ff6600, #ff4400);
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        .ai-msg.bot {
+            background: #161616;
+            color: #ddd;
+            align-self: flex-start;
+            border: 1px solid #222;
+            border-bottom-left-radius: 4px;
+        }
+        .ai-msg.bot.loading { color: #555; font-style: italic; }
+        #ai-input-row {
+            padding: 12px;
+            border-top: 1px solid #1a1a1a;
+            display: flex;
+            gap: 8px;
+            background: #0a0a0a;
+        }
+        #ai-input {
+            flex: 1;
+            background: #161616;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 13px;
+            padding: 9px 14px;
+            outline: none;
+            font-family: inherit;
+        }
+        #ai-input:focus { border-color: #ff6600; }
+        #ai-send {
+            background: #ff6600;
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            width: 38px;
+            height: 38px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            width: auto;
+            padding: 0 14px;
+            font-size: 13px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        #ai-send:hover { background: #e05500; }
+        body.light-mode #ai-panel {
+            background: #fff;
+            border-color: rgba(255,102,0,0.3);
+        }
+        body.light-mode #ai-panel-header { background: #f8f8f8; border-color: #eee; }
+        body.light-mode #ai-input-row { background: #f8f8f8; border-color: #eee; }
+        body.light-mode #ai-input { background: #f0f0f0; border-color: #ddd; color: #111; }
+        body.light-mode .ai-msg.bot { background: #f0f0f0; color: #222; border-color: #ddd; }
+        body.light-mode #card-modal {
+            background: #ffffff !important;
+            color: #111111 !important;
+        }
+        body.light-mode #card-modal h3,
+        body.light-mode #card-modal .value,
+        body.light-mode #card-modal .card-description,
+        body.light-mode #card-modal span {
+            color: #111111 !important;
+        }
+        body.light-mode #card-modal .currency {
+            color: #ff6600 !important;
+        }
+        body, .card, #card-modal {
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        /* Basis-Karte mit permanentem Orangen Leuchten */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(255, 102, 0, 0.4);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 25px rgba(255, 102, 0, 0.2);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Hover-Effekt: Groß-Ploppen */
+        .card:hover {
+            transform: translateY(-5px) scale(1.03);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 40px rgba(255, 102, 0, 0.55);
+            cursor: pointer;
+        }
+
+        /* Login Overlay (Coin-Shatter-Animation) */
+        #login-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        #login-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+        }
+
+        #login-ui {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 28px;
+            transition: opacity 0.5s;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .login-lbl {
+            font-size: clamp(10px, 1.4vw, 13px);
+            letter-spacing: .45em;
+            color: #ff9900;
+            opacity: .65;
+            text-transform: uppercase;
+        }
+
+        .login-wrap { position: relative; }
+
+        #login-name-input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #ff9900;
+            color: #fff;
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(30px, 6.5vw, 78px);
+            font-weight: 900;
+            text-align: center;
+            outline: none;
+            padding: 8px 20px;
+            width: min(88vw, 680px);
+            caret-color: #ff9900;
+            letter-spacing: .06em;
+            box-sizing: border-box;
+        }
+        #login-name-input::placeholder { color: rgba(255, 153, 0, .18); }
+
+        .login-glow {
+            position: absolute;
+            bottom: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, #ff9900, #ffe, #ff9900, transparent);
+            animation: loginGlowPulse 2s ease-in-out infinite;
+        }
+        @keyframes loginGlowPulse { 0%, 100% { opacity: .25; } 50% { opacity: .9; } }
+
+        .login-hint {
+            font-size: 11px;
+            color: rgba(255, 153, 0, .32);
+            letter-spacing: .32em;
+        }
+
+        #login-greet {
+            position: fixed;
+            z-index: 20;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(20px, 4vw, 58px);
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 20px #ff9900, 0 0 60px #ff6600, 0 0 100px #ff3300;
+            opacity: 0;
+            pointer-events: none;
+            text-align: center;
+            transition: opacity .6s;
+            white-space: nowrap;
+        }
+
+        /* Login-Overlay wird nach erfolgreichem Login zum Hintergrund-Partikelfeld */
+        #login-overlay.bg-mode {
+            background: transparent;
+            z-index: -1;
+            pointer-events: none;
+        }
+        #login-overlay.bg-mode #login-ui,
+        #login-overlay.bg-mode #login-greet { display: none; }
+
+        .hidden { display: none !important; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 { margin: 0; font-size: 24px; }
+        #user-display { color: var(--accent-color); font-weight: bold; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card h3 { margin: 0 0 8px 0; font-size: 14px; color: var(--text-muted); text-transform: uppercase; }
+        .stat-card .value { font-size: 28px; font-weight: bold; margin-bottom: 4px; }
+        .currency { font-size: 14px; color: var(--text-muted); font-weight: normal; }
+
+        /* Progress Bar */
+        .progress-container { background: #121212; border-radius: 8px; height: 8px; width: 100%; overflow: hidden; margin-top: 8px; }
+        .progress-bar { background: var(--accent-color); height: 100%; width: 0%; transition: width 0.5s ease; box-shadow: 0 0 8px var(--accent-color); }
+        .milestone-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+        /* Hardware Breakdown */
+        #hardware-breakdown { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .hardware-item { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; border-bottom: 1px solid #111; }
+
+        /* Chart & Trend */
+        .chart-container { height: 300px; position: relative; margin-top: 16px; }
+        #trend-indicator { font-size: 14px; font-weight: bold; margin-top: 8px; }
+        .trend-neutral { color: var(--accent-color); }
+        .trend-up { color: #00ff00; }
+        .trend-down { color: #ff0000; }
+
+        /* Achievement Popup */
+        #achievement-popup {
+            position: fixed;
+            bottom: -100px; left: 50%; transform: translateX(-50%);
+            background: #111; border: 2px solid var(--accent-color);
+            padding: 16px 24px; border-radius: 12px; z-index: 2000;
+            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 30px rgba(255,102,0,0.4); pointer-events: none;
+        }
+        #achievement-popup.show { bottom: 30px; }
+
+        .chat-info { color: var(--text-muted); font-size: 14px; margin: -10px 0 15px 0; }
+        .comment-section h3 { margin-top: 0; }
+        .comment-section:hover { transform: none; cursor: default; }
+
+        /* Card expansion overlay */
+        #card-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        #card-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* Expanded card state */
+        .card-expanded {
+            position: fixed !important;
+            z-index: 600 !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) scale(1) !important;
+            width: min(700px, 90vw) !important;
+            max-height: 80vh !important;
+            overflow-y: auto !important;
+            margin: 0 !important;
+            transition: all 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+            box-shadow: 0 0 80px rgba(255,102,0,0.6) !important;
+        }
+
+        .card-description {
+            display: none;
+        }
+        #card-modal .card-description {
+            display: block;
+            font-size: 13px;
+            color: #aaa;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        /* RGB Sektions-Trenner */
+        @keyframes rgbGlow {
+            0% { border-color: #ff0000; box-shadow: 0 0 25px rgba(255, 0, 0, 0.6); }
+            33% { border-color: #00ff00; box-shadow: 0 0 25px rgba(0, 255, 0, 0.6); }
+            66% { border-color: #0000ff; box-shadow: 0 0 25px rgba(0, 0, 255, 0.6); }
+            100% { border-color: #ff0000; box-shadow: 0 0 25px rgba(255, 0, 0, 0.6); }
+        }
+
+        .donation-card {
+            text-align: center;
+            margin-top: 35px;
+            margin-bottom: 25px;
+        }
+
+        .rgb-btn {
+            background-color: #0a0a0a;
+            color: #ffffff;
+            border: 2px solid #ff0000;
+            padding: 10px 28px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 12px;
+            display: inline-block;
+            animation: rgbGlow 3s infinite linear;
+            cursor: default;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- --- LOGIN SCREEN --- -->
-    <div class="login-container" id="login-overlay">
-        <div class="login-box">
-            <div class="duco-logo-bg">
-                <!-- Falls du ein Logo hast, zieht es den Glow-Effekt -->
-                <img src="" alt="" onerror="this.style.display='none'">
+    <div id="login-overlay">
+        <canvas id="login-canvas"></canvas>
+        <div id="login-ui">
+            <div class="login-lbl">Duco-Vision</div>
+            <div class="login-wrap">
+                <input id="login-name-input" type="text" placeholder="Dein Name..." autocomplete="off" spellcheck="false" maxlength="18"/>
+                <div class="login-glow"></div>
             </div>
-            <h2>DUCO-VISION</h2>
-            <div class="login-subtitle">Gib deinen Duino-Coin Namen ein</div>
-            
-            <div class="input-group">
-                <input type="text" id="username-input" placeholder="BENUTZERNAME..." autocomplete="off">
-            </div>
-            <button id="login-btn">LOGIN</button>
+            <div class="login-hint">↵ ENTER</div>
+        </div>
+        <div id="login-greet"></div>
+
+        <!-- Verstecktes Original-Login-Formular, damit script.js unverändert funktioniert -->
+        <div class="hidden">
+            <input type="text" id="username-input" placeholder="Duino-Coin Username" autocomplete="off">
+            <button id="login-btn">Launch Dashboard</button>
         </div>
     </div>
 
-    <!-- --- DASHBOARD SYSTEM --- -->
-    <div class="dashboard-layout hidden" id="dashboard">
-        <header class="main-header">
-            <h1>DUCO-VISION <span><span id="user-display"></span></span></h1>
-            <div class="live-indicator-container">
-                <div class="pulse-dot"></div>
-                <div class="indicator-text">Live System Active</div>
-            </div>
-        </header>
+    <div id="card-overlay"></div>
 
-        <!-- --- GRID & CARDS --- -->
-        <div class="grid-container">
-            <!-- Account Balance -->
-            <div class="card box-glow">
-                <div class="card-icon">💎</div>
-                <h3>Kontostand</h3>
-                <div class="stat-value" id="account-balance">0.00 <span class="currency">DUCO</span></div>
-                <span class="stat-desc">Aktuelles Gesamtguthaben auf der Blockchain.</span>
+    <div id="dashboard" class="container hidden">
+        <div class="header">
+            <h1>Duino-Coin <span id="user-display">@USER</span></h1>
+            <div style="display:flex;align-items:center;gap:12px;">
+                <!-- Light/Dark Toggle -->
+                <button id="theme-toggle" onclick="toggleTheme()" style="
+                    background:#1a1a1a;border:1px solid #333;color:#aaa;
+                    padding:6px 12px;border-radius:20px;cursor:pointer;
+                    font-size:13px;transition:all 0.2s;">🌙 Dark</button>
+                <!-- Language Selector -->
+                <select id="lang-select" onchange="setLang(this.value)" style="
+                    background:#1a1a1a;border:1px solid #333;color:#aaa;
+                    padding:6px 10px;border-radius:20px;cursor:pointer;
+                    font-size:13px;outline:none;">
+                    <option value="en">🇬🇧 EN</option>
+                    <option value="de">🇩🇪 DE</option>
+                    <option value="fr">🇫🇷 FR</option>
+                </select>
             </div>
+        </div>
+        <!-- Site Description -->
+        <p id="site-desc" style="color:#555;font-size:13px;margin:-16px 0 20px 0;line-height:1.6;">
+            A real-time Duino-Coin mining dashboard. Track your balance, hashrate, miners and market price — all in one place. This is an unofficial fan-made tool and is not affiliated with or endorsed by the Duino-Coin project.
+        </p>
 
-            <!-- Active Miners -->
-            <div class="card box-glow">
-                <div class="card-icon">⚡</div>
-                <h3>Aktive Miner</h3>
-                <div class="stat-value" id="miner-count">0</div>
-                <span class="stat-desc">Deine aktiven Mining-Geräte im Netzwerk.</span>
+        <div class="grid">
+            <div class="card stat-card" data-expandable>
+                <h3>Account Balance</h3>
+                <div class="value" id="account-balance">0.00 <span class="currency">DUCO</span></div>
+                <div class="card-description">Your total DUCO balance including all mined and received coins. Updates every 5 seconds.</div>
             </div>
-
-            <!-- Total Hashrate -->
-            <div class="card box-glow">
-                <div class="card-icon">⚙️</div>
-                <h3>Gesamte Hashrate</h3>
-                <div class="stat-value" id="total-hashrate">0 kH/s</div>
-                <span class="stat-desc">Kombinierte Rechenleistung all deiner Miner.</span>
+            <div class="card stat-card" data-expandable>
+                <h3>Active Miners</h3>
+                <div class="value" id="miner-count">0</div>
+                <div class="card-description">Number of active CPUs currently connected and submitting shares to the network.</div>
             </div>
-
-            <!-- Estimated Earnings -->
-            <div class="card box-glow">
-                <div class="card-icon">📈</div>
-                <h3>Tagesverdienst</h3>
-                <div class="stat-value" id="estimated-earnings">0.00 <span class="currency">DUCO/d</span></div>
-                <span class="stat-desc">Hochrechnung der nächsten 24 Stunden.</span>
+            <div class="card stat-card" data-expandable>
+                <h3>Total Hashrate</h3>
+                <div class="value" id="total-hashrate">0.00 <span class="currency">KH/s</span></div>
+                <div class="card-description">Combined hashing power of all your active miners in kilohashes per second.</div>
             </div>
         </div>
 
-        <!-- --- CHART & PRICE CARD --- -->
-        <div class="grid-container">
-            <div class="card chart-card box-glow">
-                <div class="chart-header">
-                    <h3>DUCO Marktpreis</h3>
-                    <div id="trend-indicator" class="trend-neutral">STABIL</div>
+        <div class="grid">
+            <div class="card stat-card" data-expandable>
+                <h3>Estimated Daily Earnings</h3>
+                <div class="value" id="estimated-earnings">0.00 <span class="currency">DUCO</span></div>
+                <div id="usd-earnings" style="font-size: 14px; color: #00ff00; margin-top: 4px;">$0.0000 <span class="currency">USD</span></div>
+                <div class="card-description">Projected 24h earnings based on your current hashrate and network difficulty via the Kolka reward system.</div>
+            </div>
+            <div class="card stat-card" style="grid-column: span 2;" data-expandable>
+                <h3>Next Milestone Progress</h3>
+                <div class="progress-container">
+                    <div id="milestone-progress" class="progress-bar"></div>
                 </div>
-                <div class="stat-value" id="duco-price">$0.000000</div>
-                <span class="stat-desc" style="margin-bottom: 15px;">Aktueller Handelskurs des Duino-Coins.</span>
-                
-                <!-- Hier kann dein Chart-Canvas oder Element rein -->
-                <div class="chart-container" id="chart-area" style="display: none;"></div>
+                <div class="milestone-info">
+                    <span>Progress</span>
+                    <span id="next-milestone-val">100 DUCO</span>
+                </div>
+                <div class="card-description">Track your journey to the next DUCO balance milestone. Unlock achievement notifications as you reach each goal.</div>
             </div>
         </div>
 
-        <!-- --- RGB DONATION SECTION --- -->
-        <div class="donation-section rgb-glow">
-            <h3>Support das Projekt</h3>
-            <p>Jeder DUCO hilft dabei, die Server online zu halten.</p>
-            <div class="donation-address">Spende an: <span class="highlight">LandoOtt</span></div>
+        <div class="grid" style="grid-template-columns: 1fr 2fr;">
+            <div class="card" data-expandable>
+                <h3 style="margin-top:0; font-size:14px; color:var(--text-muted); text-transform:uppercase;">Hardware Breakdown</h3>
+                <div id="hardware-breakdown">
+                    <p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>
+                </div>
+                <div class="card-description" style="margin-top:12px;">Individual hashrate and software info for each of your connected mining devices.</div>
+            </div>
+            <div class="card" data-expandable>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="margin:0; font-size:14px; color:var(--text-muted); text-transform:uppercase;">Global DUCO Market Price</h3>
+                    <div id="trend-indicator" class="trend-neutral">Syncing...</div>
+                </div>
+                <div class="card-description" style="margin-top:4px;">Live global DUCO price from the official Duino-Coin API server. Updates every 5 seconds.</div>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </div>
         </div>
 
-        <!-- --- COMMENT / CHAT SECTION --- -->
-        <div class="card box-glow">
-            <div class="chart-header">
-                <h3>💬 Live Chat</h3>
+        <!-- AI SECTION -->
+        <div class="ai-section">
+            <div class="card" style="overflow:visible;">
+                <h3 class="ai-section-title">🤖 DUCO AI Assistant</h3>
+                <div id="ai-chat-messages">
+                    <div class="ai-chat-msg bot">Hey! I'm DucoBOT 🪙 Ask me anything about Duino-Coin — mining, hardware, wallets, the Kolka system, pools and more!</div>
+                </div>
+                <div class="ai-mascot-wrap">
+                    <!-- Chibi DUCO Mascot SVG -->
+                    <div class="ai-mascot" title="DucoBOT" onclick="this.style.animation='none'; setTimeout(()=>this.style.animation='', 50)">
+                        <svg id="ducobot-svg" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" width="70" height="90">
+                            <defs>
+                                <radialGradient id="coinGrad" cx="40%" cy="35%">
+                                    <stop offset="0%" stop-color="#fff8c0"/>
+                                    <stop offset="30%" stop-color="#ffd040"/>
+                                    <stop offset="70%" stop-color="#ff7700"/>
+                                    <stop offset="100%" stop-color="#cc4400"/>
+                                </radialGradient>
+                                <radialGradient id="coinShine" cx="30%" cy="25%">
+                                    <stop offset="0%" stop-color="rgba(255,255,255,0.5)"/>
+                                    <stop offset="60%" stop-color="rgba(255,255,255,0)"/>
+                                </radialGradient>
+                            </defs>
+
+                            <!-- Jetpack flame left -->
+                            <ellipse id="flame-l" cx="22" cy="90" rx="5" ry="8" fill="url(#flameGrad)" opacity="0.9">
+                                <animate attributeName="ry" values="8;12;7;10;8" dur="0.3s" repeatCount="indefinite"/>
+                                <animate attributeName="opacity" values="0.9;0.6;1;0.7;0.9" dur="0.25s" repeatCount="indefinite"/>
+                            </ellipse>
+                            <!-- Jetpack flame right -->
+                            <ellipse id="flame-r" cx="58" cy="90" rx="5" ry="8" fill="url(#flameGrad)" opacity="0.9">
+                                <animate attributeName="ry" values="7;11;8;12;7" dur="0.28s" repeatCount="indefinite"/>
+                                <animate attributeName="opacity" values="0.7;1;0.6;0.9;0.7" dur="0.22s" repeatCount="indefinite"/>
+                            </ellipse>
+
+                            <!-- Jetpack left shoe -->
+                            <rect x="14" y="78" width="16" height="9" rx="4" fill="#333"/>
+                            <rect x="14" y="78" width="16" height="5" rx="3" fill="#555"/>
+                            <rect x="10" y="81" width="6" height="10" rx="3" fill="#222"/>
+                            <rect x="11" y="82" width="4" height="3" rx="1" fill="#ff6600"/>
+
+                            <!-- Jetpack right shoe -->
+                            <rect x="50" y="78" width="16" height="9" rx="4" fill="#333"/>
+                            <rect x="50" y="78" width="16" height="5" rx="3" fill="#555"/>
+                            <rect x="64" y="81" width="6" height="10" rx="3" fill="#222"/>
+                            <rect x="65" y="82" width="4" height="3" rx="1" fill="#ff6600"/>
+
+                            <!-- Left leg -->
+                            <rect x="24" y="66" width="8" height="16" rx="4" fill="#ff6600"/>
+                            <!-- Right leg -->
+                            <rect x="48" y="66" width="8" height="16" rx="4" fill="#ff6600"/>
+
+                            <!-- Left arm -->
+                            <ellipse cx="10" cy="52" rx="7" ry="4" fill="#ff8800" transform="rotate(-25 10 52)"/>
+                            <!-- Right arm -->
+                            <ellipse cx="70" cy="52" rx="7" ry="4" fill="#ff8800" transform="rotate(25 70 52)"/>
+
+                            <!-- Body/Coin -->
+                            <circle cx="40" cy="46" r="26" fill="url(#coinGrad)"/>
+                            <circle cx="40" cy="46" r="26" fill="url(#coinShine)"/>
+                            <circle cx="40" cy="46" r="23" fill="none" stroke="rgba(255,200,80,0.4)" stroke-width="1.5"/>
+                            <text x="40" y="54" font-family="Arial Black,sans-serif" font-weight="900" font-size="22" fill="rgba(140,55,0,0.5)" text-anchor="middle">D</text>
+                            <text x="40" y="53" font-family="Arial Black,sans-serif" font-weight="900" font-size="22" fill="rgba(255,255,255,0.95)" text-anchor="middle">D</text>
+
+                            <!-- Eyes (normal) -->
+                            <g id="eyes-normal">
+                                <ellipse cx="31" cy="33" rx="5" ry="5.5" fill="white"/>
+                                <ellipse cx="49" cy="33" rx="5" ry="5.5" fill="white"/>
+                                <circle cx="32" cy="34" r="3" fill="#1a0a00"/>
+                                <circle cx="50" cy="34" r="3" fill="#1a0a00"/>
+                                <circle cx="33" cy="33" r="1.2" fill="white"/>
+                                <circle cx="51" cy="33" r="1.2" fill="white"/>
+                            </g>
+
+                            <!-- Eyes thinking (hidden by default) -->
+                            <g id="eyes-thinking" opacity="0">
+                                <!-- squiggly thinking eyes -->
+                                <path d="M27 33 Q29 30 31 33 Q33 36 35 33" stroke="#1a0a00" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                                <path d="M45 33 Q47 30 49 33 Q51 36 53 33" stroke="#1a0a00" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                                <!-- thought dots -->
+                                <circle cx="58" cy="18" r="2" fill="white" opacity="0.9"/>
+                                <circle cx="63" cy="12" r="3" fill="white" opacity="0.9"/>
+                                <circle cx="70" cy="6" r="4" fill="white" opacity="0.9"/>
+                                <text x="70" y="9" font-size="5" text-anchor="middle" fill="#888">?</text>
+                            </g>
+
+                            <!-- Smile -->
+                            <path id="mascot-smile" d="M33 43 Q40 49 47 43" stroke="#8b3a00" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+                            <!-- Cheeks -->
+                            <ellipse cx="24" cy="41" rx="5" ry="3" fill="rgba(255,100,50,0.3)"/>
+                            <ellipse cx="56" cy="41" rx="5" ry="3" fill="rgba(255,100,50,0.3)"/>
+
+                            <defs>
+                                <linearGradient id="flameGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#ffffff"/>
+                                    <stop offset="30%" stop-color="#ffff00"/>
+                                    <stop offset="70%" stop-color="#ff6600"/>
+                                    <stop offset="100%" stop-color="rgba(255,0,0,0)"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="ai-input-area">
+                        <div class="ai-input-row">
+                            <input id="ai-chat-input" type="text" placeholder="Ask about Duino-Coin..." autocomplete="off"/>
+                            <button id="ai-chat-send" onclick="sendAIChat()">Send ➤</button>
+                        </div>
+                        <div class="ai-rainbow-bar"></div>
+                    </div>
+                </div>
             </div>
-            <div class="chat-info">Unterhalte dich mit anderen Duco-Vision Nutzern in Echtzeit.</div>
-            
-            <!-- Dein Iframe Widget für den Chat -->
-            <iframe src="https://widget.discord.me/server/dein-chat-link-falls-vorhanden" width="100%" height="400" allowtransparency="true" frameborder="0"></iframe>
+        </div>
+
+        <!-- UPCOMING UPDATES CARD -->
+        <div class="card" data-expandable style="margin-bottom:20px;">
+            <h3 style="margin:0 0 14px 0; font-size:14px; color:var(--text-muted); text-transform:uppercase;">🚀 Upcoming Updates</h3>
+
+            <div id="updates-list">
+                <!-- ✏️ EDIT YOUR UPDATES HERE -->
+                <div class="update-item">
+                    <span class="update-badge">Soon</span>
+                    <span class="update-text">Android App — monitor your miners on the go</span>
+                </div>
+                <div class="update-item">
+                    <span class="update-badge">Soon</span>
+                    <span class="update-text">Multi-account support — switch between multiple Duino-Coin accounts</span>
+                </div>
+                <div class="update-item">
+                    <span class="update-badge">Soon</span>
+                    <span class="update-text">Push notifications when a miner goes offline</span>
+                </div>
+                <div class="update-item">
+                    <span class="update-badge done">Done</span>
+                    <span class="update-text">DucoBOT AI Assistant with Mascot</span>
+                </div>
+                <div class="update-item">
+                    <span class="update-badge done">Done</span>
+                    <span class="update-text">Light / Dark Mode + Language Selector (EN/DE/FR)</span>
+                </div>
+                <!-- ✏️ ADD MORE UPDATES ABOVE THIS LINE -->
+            </div>
+
+            <!-- Star Rating -->
+            <div class="rating-section">
+                <span class="rating-label">Rate Duco-Vision:</span>
+                <div class="stars" id="star-row">
+                    <span class="star" data-v="1">★</span>
+                    <span class="star" data-v="2">★</span>
+                    <span class="star" data-v="3">★</span>
+                    <span class="star" data-v="4">★</span>
+                    <span class="star" data-v="5">★</span>
+                </div>
+                <span class="rating-result" id="rating-result"></span>
+            </div>
+
+            <div class="card-description">See what features are coming next to Duco-Vision. Rate the dashboard and let us know what you think!</div>
+        </div>
+
+        <div class="donation-card">
+            <div class="rgb-btn">Leave a Tip / Donations to leanderott</div>
+        </div>
+
+        <section class="card comment-section">
+            <h3>Global Community Chat</h3>
+            <p class="chat-info">Connect with other Duino-Coin miners instantly.</p>
+            <iframe src="https://www5.cbox.ws/box/?boxid=964262&boxtag=dmCmix&sec=main" 
+                    width="100%" 
+                    height="450" 
+                    allowtransparency="yes" 
+                    allow="autoplay" 
+                    frameborder="0" 
+                    marginheight="0" 
+                    marginwidth="0" 
+                    scrolling="auto"
+                    style="border-radius: 12px; background: #080808;"></iframe>
+        </section>
+    </div>
+
+    <!-- AI Chat FAB -->
+    <button id="ai-fab" onclick="toggleAI()" title="Ask AI about Duino-Coin">🤖</button>
+
+    <div id="ai-panel">
+        <div id="ai-panel-header">
+            <span>🤖 <strong>DUCO AI</strong> — Ask anything about Duino-Coin</span>
+            <button id="ai-close" onclick="toggleAI()">✕</button>
+        </div>
+        <div id="ai-messages">
+            <div class="ai-msg bot">Hey! I'm your Duino-Coin assistant. Ask me anything about mining, wallets, the DUCO coin, or how this dashboard works!</div>
+        </div>
+        <div id="ai-input-row">
+            <input id="ai-input" type="text" placeholder="Ask about Duino-Coin..." autocomplete="off" />
+            <button id="ai-send" onclick="sendAI()">Send</button>
         </div>
     </div>
 
-    <!-- --- JAVASCRIPT BRÜCKE ZU DEINER SCRIPT.JS --- -->
+    <div id="achievement-popup">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:24px;">🏆</span>
+            <span id="achievement-text" style="font-size:14px; color:#fff;">Milestone unlocked!</span>
+        </div>
+    </div>
+
     <script>
-        const loginBtn = document.getElementById('login-btn');
-        const usernameInput = document.getElementById('username-input');
-        const loginOverlay = document.getElementById('login-overlay');
-        const dashboard = document.getElementById('dashboard');
-        const userDisplay = document.getElementById('user-display');
+    (function(){
+    const canvas = document.getElementById('login-canvas');
+    const ctx = canvas.getContext('2d');
+    let W,H,DPR;
+    function resize(){
+      DPR = Math.min(window.devicePixelRatio||1, 2);
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = W*DPR; canvas.height = H*DPR;
+      canvas.style.width = W+'px'; canvas.style.height = H+'px';
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.scale(DPR,DPR);
+    }
+    resize();
+    window.addEventListener('resize', resize);
 
-        // Funktion, die den Login ausführt
-        function triggerLogin() {
-            const username = usernameInput.value.trim();
-            if (username !== "") {
-                if (userDisplay) userDisplay.textContent = `| ${username.toUpperCase()}`;
-                
-                // Blende den Login aus und das Dashboard ein
-                loginOverlay.classList.add('hidden');
-                dashboard.classList.remove('hidden');
-                
-                // Falls deine script.js globale Event-Listener hat, rufen wir sie hier auf
-                console.log("Login erfolgreich für: " + username);
-            } else {
-                alert("Bitte gib einen gültigen Namen ein.");
+    // ── AUDIO ENGINE ──────────────────────────────────────────────────────────
+    let audioCtx = null;
+    function ensureAudio(){
+      if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      return audioCtx;
+    }
+    function playBass(freq=60, dur=0.6, gain=0.9){
+      const ac = ensureAudio();
+      const o = ac.createOscillator();
+      const g = ac.createGain();
+      const dist = ac.createWaveShaper();
+      const curve = new Float32Array(256);
+      for(let i=0;i<256;i++){const x=i*2/256-1; curve[i]=x*(3+20*Math.abs(x))/(3+20*Math.abs(x)*Math.abs(x));}
+      dist.curve = curve;
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(freq, ac.currentTime);
+      o.frequency.exponentialRampToValueAtTime(freq*0.3, ac.currentTime+dur);
+      g.gain.setValueAtTime(gain, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime+dur);
+      o.connect(dist); dist.connect(g); g.connect(ac.destination);
+      o.start(); o.stop(ac.currentTime+dur);
+    }
+    function playCrack(){
+      const ac = ensureAudio();
+      const buf = ac.createBuffer(1, ac.sampleRate*0.15, ac.sampleRate);
+      const data = buf.getChannelData(0);
+      for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*Math.exp(-i/(ac.sampleRate*0.04));
+      const src = ac.createBufferSource();
+      const g = ac.createGain();
+      const filt = ac.createBiquadFilter();
+      filt.type='bandpass'; filt.frequency.value=3000; filt.Q.value=0.5;
+      src.buffer = buf;
+      g.gain.setValueAtTime(0.6, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime+0.15);
+      src.connect(filt); filt.connect(g); g.connect(ac.destination);
+      src.start();
+    }
+    function playExplosion(){
+      const ac = ensureAudio();
+      playBass(45, 1.2, 1.0);
+      setTimeout(()=>playBass(30, 0.8, 0.7), 20);
+      const buf = ac.createBuffer(1, ac.sampleRate*0.4, ac.sampleRate);
+      const data = buf.getChannelData(0);
+      for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*Math.exp(-i/(ac.sampleRate*0.08));
+      const src = ac.createBufferSource();
+      const g = ac.createGain();
+      const hi = ac.createBiquadFilter();
+      hi.type='highpass'; hi.frequency.value=4000;
+      g.gain.setValueAtTime(0.8, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime+0.4);
+      src.buffer=buf; src.connect(hi); hi.connect(g); g.connect(ac.destination);
+      src.start();
+    }
+    function playLightFlash(){
+      const ac = ensureAudio();
+      const o = ac.createOscillator();
+      const g = ac.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(1200,ac.currentTime);
+      o.frequency.exponentialRampToValueAtTime(200,ac.currentTime+0.3);
+      g.gain.setValueAtTime(0.4,ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.3);
+      o.connect(g); g.connect(ac.destination);
+      o.start(); o.stop(ac.currentTime+0.3);
+    }
+
+    // ── STATE ─────────────────────────────────────────────────────────────────
+    let phase='idle', phaseT=0, lastTS=0;
+    let userName='';
+    let appearT=0, holdT=0, shakeT=0, crackT=0, flashT=0, shatterT=0;
+    let CX,CY,R;
+    let shakeX=0,shakeY=0;
+    let crackSoundPlayed=false, flashPlayed=false;
+
+    // ── AMBIENT STARS ─────────────────────────────────────────────────────────
+    const stars=Array.from({length:300},()=>({
+      x:Math.random(),y:Math.random(),
+      r:Math.random()*1.4+.2,
+      a:Math.random(),da:(Math.random()-.5)*.007,
+      vx:(Math.random()-.5)*.12,vy:(Math.random()-.5)*.12
+    }));
+
+    // ── CRACK NETWORK (ultra-dense, 3 tiers) ────────────────────────────────────
+    const CRACKS=[];
+    const N1=20;
+    for(let i=0;i<N1;i++){
+      const angle=(i/N1)*Math.PI*2+(Math.random()-.5)*.2;
+      let a=angle;
+      const segs=[];
+      const steps=7+Math.floor(Math.random()*5);
+      const len=0.7+Math.random()*.28;
+      for(let s=0;s<steps;s++){
+        a+=(Math.random()-.5)*.14;
+        const t=(s+1)/steps*len;
+        segs.push({x:Math.cos(a)*t,y:Math.sin(a)*t});
+      }
+      CRACKS.push({segs,delay:i*0.025,w:2.2+Math.random()*.8,tier:1});
+    }
+    for(let i=0;i<N1;i++){
+      const parent=CRACKS[i];
+      const numBranches=2+Math.floor(Math.random()*2);
+      for(let b=0;b<numBranches;b++){
+        const fromIdx=Math.floor(parent.segs.length*.2+Math.random()*parent.segs.length*.6);
+        const from=parent.segs[fromIdx]||parent.segs[0];
+        const pAngle=Math.atan2(parent.segs[Math.min(fromIdx+1,parent.segs.length-1)].y-from.y,
+                                parent.segs[Math.min(fromIdx+1,parent.segs.length-1)].x-from.x);
+        const branchA=pAngle+(Math.random()>.5?1:-1)*(.25+Math.random()*.5);
+        let ba=branchA;
+        const bsegs=[];
+        const blen=.15+Math.random()*.25;
+        const bsteps=3+Math.floor(Math.random()*3);
+        for(let s=0;s<bsteps;s++){
+          ba+=(Math.random()-.5)*.18;
+          const t=(s+1)/bsteps*blen;
+          bsegs.push({x:from.x+Math.cos(ba)*t,y:from.y+Math.sin(ba)*t});
+        }
+        CRACKS.push({segs:bsegs,delay:CRACKS[i].delay+.08+Math.random()*.05,w:.8+Math.random()*.5,tier:2});
+      }
+    }
+    for(let i=0;i<60;i++){
+      const angle=Math.random()*Math.PI*2;
+      const startDist=.05+Math.random()*.7;
+      const sx=Math.cos(angle)*startDist, sy=Math.sin(angle)*startDist;
+      const miclen=.04+Math.random()*.12;
+      const micA=Math.random()*Math.PI*2;
+      const segs=[
+        {x:sx+Math.cos(micA)*miclen*.5, y:sy+Math.sin(micA)*miclen*.5},
+        {x:sx+Math.cos(micA)*miclen, y:sy+Math.sin(micA)*miclen},
+      ];
+      CRACKS.push({segs,delay:.1+Math.random()*.6,w:.4+Math.random()*.35,tier:3});
+    }
+
+    // ── FRAGMENTS (voronoi-ish wedges) ──────────────────────────────────────────
+    let FRAGS=[];
+    function buildFrags(cx,cy,r){
+      FRAGS=[];
+      const mainCracks=CRACKS.filter(c=>c.tier===1);
+      const N=mainCracks.length;
+      for(let i=0;i<N;i++){
+        const cA=mainCracks[i];
+        const cB=mainCracks[(i+1)%N];
+        const aSegs=cA.segs; const bSegs=cB.segs;
+        const aEnd=aSegs[aSegs.length-1]; const bEnd=bSegs[bSegs.length-1];
+        const layers=[.3,.6,1.0];
+        for(let li=0;li<layers.length;li++){
+          const aFrac0=li===0?0:layers[li-1], aFrac1=layers[li];
+          const aIdxRange=[Math.floor(aFrac0*aSegs.length),Math.floor(aFrac1*aSegs.length)];
+          const bIdxRange=[Math.floor(aFrac0*bSegs.length),Math.floor(aFrac1*bSegs.length)];
+
+          const aSlice=aSegs.slice(aIdxRange[0],Math.max(aIdxRange[0]+1,aIdxRange[1]));
+          const bSlice=bSegs.slice(bIdxRange[0],Math.max(bIdxRange[0]+1,bIdxRange[1]));
+
+          const poly=[
+            li===0?{x:0,y:0}:null,
+            ...aSlice.map(s=>({x:s.x*r,y:s.y*r})),
+            {x:Math.cos(Math.atan2(aEnd.y,aEnd.x)+.05)*(aFrac1*r*.95),y:Math.sin(Math.atan2(aEnd.y,aEnd.x)+.05)*(aFrac1*r*.95)},
+            {x:Math.cos(Math.atan2(bEnd.y,bEnd.x)-.05)*(aFrac1*r*.95),y:Math.sin(Math.atan2(bEnd.y,bEnd.x)-.05)*(aFrac1*r*.95)},
+            ...bSlice.slice().reverse().map(s=>({x:s.x*r,y:s.y*r})),
+          ].filter(Boolean);
+
+          let fcx=0,fcy=0;
+          poly.forEach(p=>{fcx+=p.x;fcy+=p.y});
+          fcx/=poly.length; fcy/=poly.length;
+          const explA=Math.atan2(fcy,fcx);
+          const explD=Math.sqrt(fcx*fcx+fcy*fcy);
+          const speed=(4+Math.random()*8)*(1+explD/(r+1)*.5);
+          const isInner=explD<r*.35;
+          const isMid=explD<r*.65;
+
+          FRAGS.push({
+            poly,cx:cx,cy:cy,
+            fcx,fcy,
+            vx:Math.cos(explA)*speed+(Math.random()-.5)*2,
+            vy:Math.sin(explA)*speed-1-Math.random()*4+(Math.random()-.5)*2,
+            rot:0,drot:(Math.random()-.5)*.3,
+            isInner,isMid,
+            alpha:1,
+            glintX:poly[0]?poly[0].x*.25:0, glintY:poly[0]?poly[0].y*.25:0,
+          });
+        }
+      }
+    }
+
+    // ── GLASS SHARDS ─────────────────────────────────────────────────────────────
+    let SHARDS=[];
+    function spawnShards(cx,cy,r){
+      SHARDS=[];
+      for(let i=0;i<90;i++){
+        const angle=Math.random()*Math.PI*2;
+        const speed=6+Math.random()*16;
+        const len=14+Math.random()*50;
+        const wid=1.5+Math.random()*7;
+        const numVerts=3+Math.floor(Math.random()*3);
+        const verts=[];
+        for(let v=0;v<numVerts;v++){
+          const va=(v/numVerts)*Math.PI*2+(Math.random()-.5)*.6;
+          const vr=v%2===0?len*(0.7+Math.random()*.3):len*(0.2+Math.random()*.4);
+          verts.push({x:Math.cos(va)*vr*(wid/len*2+.3),y:Math.sin(va)*vr});
+        }
+        SHARDS.push({
+          x:cx+Math.cos(angle)*r*(Math.random()*.4),
+          y:cy+Math.sin(angle)*r*(Math.random()*.4),
+          vx:Math.cos(angle)*speed*(0.7+Math.random()),
+          vy:Math.sin(angle)*speed*(0.5+Math.random())-3-Math.random()*8,
+          verts, len, wid,
+          rot:angle+(Math.random()-.5)*.8,
+          drot:(Math.random()-.5)*.18,
+          baseAlpha:.15+Math.random()*.25,
+          life:1, decay:.00015+Math.random()*.00025,
+          type:'glass',
+          gravity:.05+Math.random()*.05,
+          tint: Math.random()>.6 ? [255,200,80] : [220,240,255],
+        });
+      }
+      for(let i=0;i<200;i++){
+        const angle=Math.random()*Math.PI*2;
+        const speed=3+Math.random()*10;
+        const len=4+Math.random()*22;
+        const wid=0.8+Math.random()*3.5;
+        SHARDS.push({
+          x:cx+Math.cos(angle)*r*(Math.random()*.9),
+          y:cy+Math.sin(angle)*r*(Math.random()*.9),
+          vx:Math.cos(angle)*speed*(0.5+Math.random()),
+          vy:Math.sin(angle)*speed*(0.4+Math.random())-1.5-Math.random()*5,
+          verts:null, len, wid,
+          rot:Math.random()*Math.PI*2,
+          drot:(Math.random()-.5)*.22,
+          baseAlpha:.12+Math.random()*.2,
+          life:1, decay:.0002+Math.random()*.0005,
+          type:'splinter',
+          gravity:.03+Math.random()*.04,
+          tint: Math.random()>.5 ? [255,210,100] : [200,230,255],
+        });
+      }
+      for(let i=0;i<350;i++){
+        const angle=Math.random()*Math.PI*2;
+        const speed=1+Math.random()*9;
+        const sz=0.5+Math.random()*3.5;
+        SHARDS.push({
+          x:cx+(Math.random()-.5)*r*2.5,
+          y:cy+(Math.random()-.5)*r*2.5,
+          vx:Math.cos(angle)*speed,
+          vy:Math.sin(angle)*speed-0.5,
+          verts:null, len:sz, wid:sz*.4,
+          rot:Math.random()*Math.PI*2,
+          drot:(Math.random()-.5)*.3,
+          baseAlpha:.5+Math.random()*.5,
+          life:1, decay:.0004+Math.random()*.0012,
+          type:'dust',
+          gravity:.018,
+          tint: Math.random()>.4 ? [255,220,80] : [255,255,255],
+        });
+      }
+    }
+
+    function drawShard(s){
+      const a=s.life*s.baseAlpha; if(a<=.005)return;
+      ctx.save();
+      ctx.translate(s.x,s.y);
+      ctx.rotate(s.rot);
+
+      if(s.type==='dust'){
+        ctx.globalAlpha=s.life*s.baseAlpha;
+        ctx.beginPath();
+        ctx.arc(0,0,s.len,0,Math.PI*2);
+        ctx.fillStyle=`rgba(${s.tint[0]},${s.tint[1]},${s.tint[2]},1)`;
+        ctx.fill();
+        if(s.len>2){
+          ctx.globalAlpha=s.life*s.baseAlpha*.5;
+          ctx.beginPath();
+          ctx.moveTo(-s.len*2,0); ctx.lineTo(s.len*2,0);
+          ctx.moveTo(0,-s.len*2); ctx.lineTo(0,s.len*2);
+          ctx.strokeStyle=`rgba(255,255,255,0.8)`;
+          ctx.lineWidth=.5; ctx.stroke();
+        }
+      } else if(s.type==='splinter'){
+        ctx.beginPath();
+        ctx.moveTo(0,-s.len*.5);
+        ctx.lineTo(s.wid*.5,s.len*.1);
+        ctx.lineTo(s.wid*.3,s.len*.5);
+        ctx.lineTo(-s.wid*.3,s.len*.5);
+        ctx.lineTo(-s.wid*.5,s.len*.1);
+        ctx.closePath();
+
+        ctx.globalAlpha=s.life*s.baseAlpha;
+        ctx.fillStyle=`rgba(${s.tint[0]},${s.tint[1]},${s.tint[2]},0.08)`;
+        ctx.fill();
+
+        ctx.globalAlpha=s.life*(s.baseAlpha*3+.1);
+        ctx.strokeStyle=`rgba(${s.tint[0]},${s.tint[1]},${s.tint[2]},0.9)`;
+        ctx.lineWidth=.7;
+        ctx.stroke();
+
+        ctx.globalAlpha=s.life*(s.baseAlpha*2+.2);
+        ctx.beginPath();
+        ctx.moveTo(s.wid*.05,-s.len*.42);
+        ctx.lineTo(s.wid*.28,s.len*.05);
+        ctx.strokeStyle='rgba(255,255,255,0.85)';
+        ctx.lineWidth=.5; ctx.stroke();
+      } else {
+        if(!s.verts||s.verts.length<3){ctx.restore();return;}
+        ctx.beginPath();
+        s.verts.forEach((v,i)=>i===0?ctx.moveTo(v.x,v.y):ctx.lineTo(v.x,v.y));
+        ctx.closePath();
+
+        ctx.globalAlpha=s.life*s.baseAlpha;
+        const gfill=ctx.createLinearGradient(s.verts[0].x,s.verts[0].y,
+                                              s.verts[Math.floor(s.verts.length/2)].x,
+                                              s.verts[Math.floor(s.verts.length/2)].y);
+        gfill.addColorStop(0,`rgba(${s.tint[0]},${s.tint[1]},${s.tint[2]},0.06)`);
+        gfill.addColorStop(.5,'rgba(255,255,255,0.04)');
+        gfill.addColorStop(1,`rgba(${s.tint[0]},${s.tint[1]},${s.tint[2]},0.1)`);
+        ctx.fillStyle=gfill;
+        ctx.fill();
+
+        ctx.globalAlpha=s.life*(s.baseAlpha*4+.15);
+        ctx.strokeStyle=`rgba(${s.tint[0]},${s.tint[1]},${s.tint[2]},0.95)`;
+        ctx.lineWidth=1.1; ctx.stroke();
+
+        ctx.globalAlpha=s.life*(s.baseAlpha*3);
+        ctx.beginPath();
+        const v0=s.verts[0], v1=s.verts[1]||s.verts[0];
+        ctx.moveTo(v0.x*.2,v0.y*.2);
+        ctx.lineTo(v0.x*.6+v1.x*.2, v0.y*.6+v1.y*.2);
+        ctx.strokeStyle='rgba(255,255,255,0.9)';
+        ctx.lineWidth=.8; ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // ── DRAW COIN ─────────────────────────────────────────────────────────────
+    function drawCoin(cx,cy,r,crackP,alpha,spinA){
+      ctx.save();
+      ctx.translate(cx,cy);
+      if(spinA) ctx.rotate(spinA);
+      ctx.globalAlpha=alpha;
+
+      const outerGlow=ctx.createRadialGradient(0,0,r*.6,0,0,r*2.2);
+      outerGlow.addColorStop(0,'rgba(255,130,0,.18)');
+      outerGlow.addColorStop(.5,'rgba(255,80,0,.06)');
+      outerGlow.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.beginPath(); ctx.arc(0,0,r*2.2,0,Math.PI*2);
+      ctx.fillStyle=outerGlow; ctx.fill();
+
+      const rimGrad=ctx.createLinearGradient(-r,-r,r,r);
+      rimGrad.addColorStop(0,'#fff8c0');
+      rimGrad.addColorStop(.25,'#ffd040');
+      rimGrad.addColorStop(.5,'#ff7700');
+      rimGrad.addColorStop(.75,'#cc4400');
+      rimGrad.addColorStop(1,'#ff9900');
+      ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2);
+      ctx.fillStyle=rimGrad; ctx.fill();
+
+      const bevel=ctx.createRadialGradient(0,0,r*.6,0,0,r*.98);
+      bevel.addColorStop(0,'rgba(255,220,80,.0)');
+      bevel.addColorStop(.7,'rgba(255,180,20,.1)');
+      bevel.addColorStop(1,'rgba(255,255,180,.35)');
+      ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2);
+      ctx.fillStyle=bevel; ctx.fill();
+
+      const innerGrad=ctx.createRadialGradient(-r*.15,-r*.15,0,0,0,r*.75);
+      innerGrad.addColorStop(0,'rgba(255,255,255,1)');
+      innerGrad.addColorStop(.18,'rgba(255,250,220,1)');
+      innerGrad.addColorStop(.45,'rgba(255,230,100,.95)');
+      innerGrad.addColorStop(.75,'rgba(255,150,10,.8)');
+      innerGrad.addColorStop(1,'rgba(200,70,0,.4)');
+      ctx.beginPath(); ctx.arc(0,0,r*.78,0,Math.PI*2);
+      ctx.fillStyle=innerGrad; ctx.fill();
+
+      ctx.font=`900 ${r*.62}px Orbitron,monospace`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillStyle='rgba(140,55,0,.7)';
+      ctx.fillText('D',r*.02,r*.025);
+      ctx.fillStyle='rgba(255,255,255,.92)';
+      ctx.fillText('D',0,0);
+      ctx.fillStyle='rgba(255,255,220,.35)';
+      ctx.font=`900 ${r*.61}px Orbitron,monospace`;
+      ctx.fillText('D',-r*.012,-r*.012);
+
+      ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,220,80,.5)';
+      ctx.lineWidth=r*.022; ctx.stroke();
+
+      ctx.beginPath(); ctx.arc(0,0,r*.8,0,Math.PI*2);
+      ctx.strokeStyle='rgba(255,200,60,.3)';
+      ctx.lineWidth=r*.012; ctx.stroke();
+
+      const hl1=ctx.createRadialGradient(-r*.3,-r*.35,0,-r*.28,-r*.32,r*.45);
+      hl1.addColorStop(0,'rgba(255,255,255,.55)');
+      hl1.addColorStop(.6,'rgba(255,255,255,.08)');
+      hl1.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2);
+      ctx.fillStyle=hl1; ctx.fill();
+
+      const hl2=ctx.createRadialGradient(r*.3,r*.3,0,r*.28,r*.28,r*.38);
+      hl2.addColorStop(0,'rgba(255,200,100,.2)');
+      hl2.addColorStop(1,'rgba(255,200,100,0)');
+      ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2);
+      ctx.fillStyle=hl2; ctx.fill();
+
+      ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.clip();
+
+      if(crackP>0){
+        CRACKS.forEach((crack,ci)=>{
+          const localP=Math.max(0,Math.min(1,(crackP-crack.delay)*3.5));
+          if(localP<=0) return;
+
+          const baseWidth=crack.w*(crack.tier===1?1:crack.tier===2?.55:.3);
+          const segs=crack.segs;
+
+          ctx.beginPath();
+          ctx.moveTo(0,0);
+
+          const visSegs=Math.ceil(localP*segs.length);
+          for(let si=0;si<visSegs;si++){
+            const seg=segs[si];
+            const segFrac=Math.min(1,localP*segs.length-si);
+            const prevX=si===0?0:segs[si-1].x*r;
+            const prevY=si===0?0:segs[si-1].y*r;
+            const tx=prevX+(seg.x*r-prevX)*segFrac;
+            const ty=prevY+(seg.y*r-prevY)*segFrac;
+            ctx.lineTo(tx,ty);
+          }
+
+          ctx.strokeStyle=`rgba(0,0,0,${crack.tier===1?.85:crack.tier===2?.7:.5})`;
+          ctx.lineWidth=baseWidth*1.5;
+          ctx.lineCap='round';
+          ctx.stroke();
+
+          ctx.strokeStyle=crack.tier===1
+            ?`rgba(200,235,255,${.7*localP})`
+            :`rgba(220,245,255,${.5*localP})`;
+          ctx.lineWidth=baseWidth*(crack.tier===1?.7:.4);
+          ctx.stroke();
+
+          if(localP>.7 && crack.tier<3){
+            const last=segs[segs.length-1];
+            const gl=ctx.createRadialGradient(last.x*r,last.y*r,0,last.x*r,last.y*r,r*(crack.tier===1?.06:.035));
+            gl.addColorStop(0,'rgba(255,255,255,.95)');
+            gl.addColorStop(.4,'rgba(180,230,255,.5)');
+            gl.addColorStop(1,'rgba(0,0,0,0)');
+            ctx.beginPath(); ctx.arc(last.x*r,last.y*r,r*(crack.tier===1?.06:.035),0,Math.PI*2);
+            ctx.fillStyle=gl; ctx.fill();
+          }
+        });
+
+        if(crackP>.35){
+          const darkA=Math.min(.45,(crackP-.35)*.9);
+          ctx.fillStyle=`rgba(5,10,20,${darkA})`;
+          ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
+
+          const prism=ctx.createRadialGradient(-r*.1,r*.05,0,0,0,r);
+          prism.addColorStop(0,`rgba(160,210,255,${darkA*.35})`);
+          prism.addColorStop(.4,`rgba(255,220,80,${darkA*.2})`);
+          prism.addColorStop(.8,`rgba(200,80,255,${darkA*.12})`);
+          prism.addColorStop(1,'rgba(0,0,0,0)');
+          ctx.fillStyle=prism;
+          ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fill();
+        }
+
+        if(crackP>.5){
+          const innerLight=(crackP-.5)*2;
+          const il=ctx.createRadialGradient(0,0,0,0,0,r*.7);
+          il.addColorStop(0,`rgba(255,255,240,${Math.min(.9,innerLight*.8)})`);
+          il.addColorStop(.3,`rgba(255,220,100,${Math.min(.5,innerLight*.4)})`);
+          il.addColorStop(1,'rgba(0,0,0,0)');
+          ctx.fillStyle=il;
+          ctx.beginPath(); ctx.arc(0,0,r*.7,0,Math.PI*2); ctx.fill();
+        }
+      }
+
+      ctx.restore();
+    }
+
+    // ── DRAW FRAGS ────────────────────────────────────────────────────────────
+    function drawFrags(t){
+      const ease=t*t*(3-2*t);
+      FRAGS.forEach(f=>{
+        const a=Math.max(0,1-t*1.2); if(a<=.01)return;
+        const px=f.cx+f.fcx+f.vx*ease*180;
+        const py=f.cy+f.fcy+f.vy*ease*180+ease*ease*60;
+        const rot=f.rot+f.drot*ease*25;
+        ctx.save();
+        ctx.translate(px,py);
+        ctx.rotate(rot);
+        ctx.globalAlpha=a;
+
+        ctx.beginPath();
+        f.poly.forEach((pt,i)=>i===0?ctx.moveTo(pt.x,pt.y):ctx.lineTo(pt.x,pt.y));
+        ctx.closePath();
+
+        if(f.isInner){
+          const g=ctx.createLinearGradient(0,-20,20,20);
+          g.addColorStop(0,'rgba(255,255,255,1)');
+          g.addColorStop(.3,'rgba(240,250,255,.95)');
+          g.addColorStop(.7,'rgba(200,230,255,.85)');
+          g.addColorStop(1,'rgba(150,200,255,.6)');
+          ctx.fillStyle=g;
+        } else if(f.isMid){
+          const g=ctx.createLinearGradient(0,-15,15,15);
+          g.addColorStop(0,'rgba(255,230,100,1)');
+          g.addColorStop(.4,'rgba(255,160,30,.9)');
+          g.addColorStop(1,'rgba(200,80,0,.7)');
+          ctx.fillStyle=g;
+        } else {
+          const g=ctx.createLinearGradient(-10,-10,10,10);
+          g.addColorStop(0,'rgba(255,180,50,1)');
+          g.addColorStop(.5,'rgba(200,80,0,.85)');
+          g.addColorStop(1,'rgba(100,30,0,.6)');
+          ctx.fillStyle=g;
+        }
+        ctx.fill();
+
+        ctx.strokeStyle=f.isInner?'rgba(220,240,255,.8)':'rgba(255,220,80,.6)';
+        ctx.lineWidth=.9; ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(f.glintX,f.glintY,Math.max(2,Math.abs(f.fcx)*.08),0,Math.PI*2);
+        ctx.fillStyle=`rgba(255,255,255,${a*.6})`;
+        ctx.fill();
+
+        ctx.restore();
+      });
+    }
+
+    // ── FLASH ─────────────────────────────────────────────────────────────────
+    let flashAlpha=0;
+    function drawFlash(t){
+      const peak=Math.max(0,1-Math.abs(t-.15)/.15);
+      flashAlpha=peak*.98;
+      if(flashAlpha<.01)return;
+      const fl=ctx.createRadialGradient(CX,CY,0,CX,CY,R*2.5);
+      fl.addColorStop(0,`rgba(255,255,255,${flashAlpha})`);
+      fl.addColorStop(.15,`rgba(255,240,200,${flashAlpha*.85})`);
+      fl.addColorStop(.4,`rgba(255,200,80,${flashAlpha*.4})`);
+      fl.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=fl;
+      ctx.fillRect(0,0,W,H);
+    }
+
+    // ── SHOCKWAVE ─────────────────────────────────────────────────────────────
+    function drawShockwave(t){
+      [0, .15, .3].forEach((offset,i)=>{
+        const st=Math.max(0,t-offset);
+        if(st<=0||st>=1)return;
+        const sr=R*(1+st*3.5);
+        const sa=Math.max(0,.5-st*.55);
+        ctx.beginPath(); ctx.arc(CX,CY,sr,0,Math.PI*2);
+        ctx.strokeStyle=i===0?`rgba(255,230,100,${sa})`
+                      :i===1?`rgba(255,200,80,${sa*.7})`
+                      :`rgba(200,240,255,${sa*.5})`;
+        ctx.lineWidth=Math.max(.5,3*(1-st)*(i===0?1:.6));
+        ctx.stroke();
+      });
+    }
+
+    // ── VIBRATION SEQUENCER ───────────────────────────────────────────────────
+    function computeShake(t){
+      const freq=35+t*50;
+      const envelope=t*t;
+      const mag=envelope*18;
+      const sx=(Math.sin(t*freq*Math.PI*2)*mag + (Math.random()-.5)*mag*.5);
+      const sy=(Math.cos(t*freq*Math.PI*2)*mag*.8 + (Math.random()-.5)*mag*.5);
+      return {sx,sy};
+    }
+
+    // ── LOGIN ABSCHLIESSEN (Übergabe an script.js + Dashboard) ─────────────────
+    let handedOff=false;
+    function handOffToDashboard(){
+      if(handedOff)return;
+      handedOff=true;
+      const overlay=document.getElementById('login-overlay');
+      // Originales (verstecktes) Login-Formular befüllen & auslösen, damit
+      // script.js exakt wie zuvor funktioniert (Datenabruf, user-display, etc.)
+      const origInput=document.getElementById('username-input');
+      const origBtn=document.getElementById('login-btn');
+      if(origInput) origInput.value=userName;
+      if(origBtn) origBtn.click();
+
+      // Overlay zu einem transparenten Hintergrund-Layer machen, damit die
+      // Glassplitter als Partikel hinter dem Dashboard weiterfliegen
+      setTimeout(()=>{
+        overlay.classList.add('bg-mode');
+      }, 900);
+    }
+
+    // ── MAIN LOOP ─────────────────────────────────────────────────────────────
+    function loop(ts){
+      requestAnimationFrame(loop);
+      const dt=Math.min((ts-lastTS)/1000,.05); lastTS=ts;
+      CX=W/2; CY=H/2; R=Math.min(W,H)*.28;
+
+      ctx.clearRect(0,0,W,H);
+      // Im Hintergrund-Modus bleibt der Canvas transparent (kein schwarzer Fill),
+      // damit das Dashboard darunter sichtbar bleibt.
+      const bgMode=document.getElementById('login-overlay').classList.contains('bg-mode');
+      if(!bgMode){
+        ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+      }
+
+      if(!bgMode){
+        stars.forEach(s=>{
+          s.x+=s.vx/W; s.y+=s.vy/H; s.a+=s.da;
+          if(s.x<0)s.x=1;if(s.x>1)s.x=0;
+          if(s.y<0)s.y=1;if(s.y>1)s.y=0;
+          if(s.a<0||s.a>1)s.da*=-1;
+          ctx.beginPath(); ctx.arc(s.x*W,s.y*H,s.r,0,Math.PI*2);
+          ctx.fillStyle=`rgba(255,150,50,${s.a*.35})`; ctx.fill();
+        });
+      }
+
+      // Shards: bereits ab der Explosion (shatter) sichtbar, danach im Drift
+      // weiterhin (auch als Dashboard-Hintergrund-Partikel) sichtbar.
+      if(phase==='flash'||phase==='shatter'||phase==='drift'||phase==='done'){
+        SHARDS.forEach(s=>{
+          s.x+=s.vx; s.y+=s.vy;
+          s.vy+=s.gravity*.1;
+          s.vx*=.9992; s.vy*=.9988;
+          s.rot+=s.drot;
+          s.life-=s.decay;
+          if(s.life<0)s.life=0;
+          if(s.x<-80)s.x=W+80; if(s.x>W+80)s.x=-80;
+          if(s.y>H+80){s.y=-80; s.x=Math.random()*W;}
+          drawShard(s);
+        });
+      }
+
+      if(phase==='idle')return;
+
+      if(phase==='appear'){
+        appearT+=dt*1.2;
+        const ep=1-(1-Math.min(1,appearT))*(1-Math.min(1,appearT))*(1-Math.min(1,appearT));
+        const scale=.1+ep*.9;
+        const spinA=(1-ep)*Math.PI*3;
+        ctx.save();
+        ctx.translate(CX,CY); ctx.scale(scale,scale); ctx.translate(-CX,-CY);
+        drawCoin(CX,CY,R,0,Math.min(1,appearT*1.8),spinA);
+        ctx.restore();
+        if(appearT>=1.1){phase='hold';holdT=0;}
+      }
+
+      if(phase==='hold'){
+        holdT+=dt;
+        drawCoin(CX,CY,R,0,1,0);
+        if(holdT>.5){phase='vibrate';shakeT=0;crackSoundPlayed=false;
+          playBass(55,0.9,0.95);
+        }
+      }
+
+      if(phase==='vibrate'){
+        shakeT+=dt;
+        const vt=Math.min(1,shakeT/.8);
+        const sh=computeShake(vt);
+        if(shakeT>.1 && !crackSoundPlayed){
+          crackSoundPlayed=true;
+          playBass(38,1.5,0.8);
+        }
+        ctx.save();
+        ctx.translate(sh.sx,sh.sy);
+        drawCoin(CX,CY,R,0,1,0);
+        ctx.restore();
+        if(shakeT>=.85){
+          phase='crack'; crackT=0;
+          playCrack();
+        }
+      }
+
+      if(phase==='crack'){
+        crackT+=dt*.7;
+        const shakeEnv=Math.min(1,crackT*.8)*(1-Math.max(0,(crackT-.6)*2));
+        const sh=computeShake(shakeEnv*.7+.3);
+        shakeX=sh.sx*shakeEnv; shakeY=sh.sy*shakeEnv;
+
+        if(crackT>.15&&!flashPlayed){
+          flashPlayed=true;
+          playCrack();
+        }
+
+        ctx.save();
+        ctx.translate(shakeX,shakeY);
+        drawCoin(CX,CY,R,crackT,1,0);
+        ctx.restore();
+
+        if(crackT>.3){
+          const bleedA=Math.min(.3,(crackT-.3)*1.2);
+          const bl=ctx.createRadialGradient(CX+shakeX,CY+shakeY,0,CX+shakeX,CY+shakeY,R*1.8);
+          bl.addColorStop(0,`rgba(255,255,200,${bleedA})`);
+          bl.addColorStop(.5,`rgba(255,200,80,${bleedA*.4})`);
+          bl.addColorStop(1,'rgba(0,0,0,0)');
+          ctx.fillStyle=bl; ctx.fillRect(0,0,W,H);
+        }
+
+        if(crackT>=1.4){
+          phase='flash'; flashT=0;
+          playLightFlash();
+        }
+      }
+
+      if(phase==='flash'){
+        flashT+=dt*3.5;
+
+        // Shards sofort beim ersten Flash-Frame spawnen
+        if(flashT<=dt*3.5+0.01 && SHARDS.length===0){
+          spawnShards(CX,CY,R);
+        }
+
+        ctx.save();
+        ctx.translate((Math.random()-.5)*5,(Math.random()-.5)*5);
+        drawCoin(CX,CY,R,1.4,1,0);
+        ctx.restore();
+
+        drawFlash(flashT);
+
+        if(flashT>=.42){
+          phase='shatter'; shatterT=0;
+          buildFrags(CX,CY,R);
+          playExplosion();
+          const g=document.getElementById('login-greet');
+          g.textContent=`Hey, ${userName}!`;
+          setTimeout(()=>g.style.opacity='1',400);
+        }
+      }
+
+      if(phase==='shatter'){
+        shatterT+=dt*.65;
+
+        if(shatterT<.12){
+          const fb=Math.max(0,.12-shatterT)/.12;
+          ctx.fillStyle=`rgba(255,250,220,${fb*.6})`; ctx.fillRect(0,0,W,H);
+        }
+
+        drawShockwave(shatterT);
+        drawFrags(shatterT);
+
+        if(shatterT>=1.6){
+          phase='drift';
+          SHARDS.forEach(s=>{s.life=Math.min(s.life,0.85);});
+          // Greeting ausblenden & Übergabe ans Dashboard starten
+          const g=document.getElementById('login-greet');
+          g.style.opacity='0';
+          handOffToDashboard();
+        }
+      }
+    }
+
+    requestAnimationFrame(loop);
+
+    document.getElementById('login-name-input').addEventListener('keydown',e=>{
+      if(e.key!=='Enter')return;
+      const v=e.target.value.trim();
+      if(!v||phase!=='idle')return;
+      userName=v;
+      document.getElementById('login-ui').style.opacity='0';
+      document.getElementById('login-ui').style.pointerEvents='none';
+      phase='appear'; appearT=0;
+    });
+    })();
+    </script>
+
+    <script src="script.js"></script>
+    <script>
+        const overlay = document.getElementById('card-overlay');
+
+        // Modal element
+        const modal = document.createElement('div');
+        modal.id = 'card-modal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.85);
+            width: min(680px, 90vw);
+            max-height: 80vh;
+            overflow-y: auto;
+            background: #0c0c0c;
+            border: 1px solid rgba(255,102,0,0.6);
+            border-radius: 20px;
+            padding: 28px;
+            z-index: 700;
+            box-shadow: 0 0 80px rgba(255,102,0,0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        `;
+        document.body.appendChild(modal);
+
+        function openModal(card) {
+            modal.innerHTML = card.innerHTML;
+            // Show full description in modal
+
+            modal.style.opacity = '1';
+            modal.style.pointerEvents = 'all';
+            modal.style.transform = 'translate(-50%, -50%) scale(1)';
+            overlay.classList.add('active');
+        }
+
+        function closeModal() {
+            modal.style.opacity = '0';
+            modal.style.transform = 'translate(-50%, -50%) scale(0.85)';
+            modal.style.pointerEvents = 'none';
+            overlay.classList.remove('active');
+        }
+
+        document.querySelectorAll('[data-expandable]').forEach(card => {
+            card.addEventListener('click', () => openModal(card));
+        });
+
+        overlay.addEventListener('click', closeModal);
+
+        // ── AI CHAT ──────────────────────────────────────────────────────────
+        function toggleAI() {
+            document.getElementById('ai-panel').classList.toggle('open');
+            document.getElementById('ai-input').focus();
+        }
+
+        const aiHistory = [];
+        const AI_SYSTEM = `You are a helpful Duino-Coin expert assistant embedded in an unofficial fan-made mining dashboard. Answer questions about Duino-Coin (DUCO) — mining, wallets, hardware (ESP32, Arduino, Raspberry Pi Pico, PC), the Kolka reward system, exchanges, the DUCO-S1 algorithm, pools, and the community. Be concise and friendly. If asked about unrelated topics, politely redirect to Duino-Coin. This dashboard is not affiliated with the official Duino-Coin project.`;
+
+        async function sendAI() {
+            const input = document.getElementById('ai-input');
+            const messages = document.getElementById('ai-messages');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            input.disabled = true;
+            document.getElementById('ai-send').disabled = true;
+
+            // User message
+            const userDiv = document.createElement('div');
+            userDiv.className = 'ai-msg user';
+            userDiv.textContent = text;
+            messages.appendChild(userDiv);
+
+            // Loading
+            const loadDiv = document.createElement('div');
+            loadDiv.className = 'ai-msg bot loading';
+            loadDiv.textContent = 'Thinking...';
+            messages.appendChild(loadDiv);
+            messages.scrollTop = messages.scrollHeight;
+
+            aiHistory.push({ role: 'user', content: text });
+
+            try {
+                const res = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'claude-sonnet-4-6',
+                        max_tokens: 1000,
+                        system: AI_SYSTEM,
+                        messages: aiHistory
+                    })
+                });
+                const data = await res.json();
+                const reply = data.content?.[0]?.text || 'Sorry, I could not get a response.';
+                aiHistory.push({ role: 'assistant', content: reply });
+
+                loadDiv.className = 'ai-msg bot';
+                loadDiv.textContent = reply;
+            } catch(e) {
+                loadDiv.className = 'ai-msg bot';
+                loadDiv.textContent = 'Connection error. Please try again.';
             }
+
+            messages.scrollTop = messages.scrollHeight;
+            input.disabled = false;
+            document.getElementById('ai-send').disabled = false;
+            input.focus();
         }
 
-        // Klick-Event für den Button
-        if (loginBtn) {
-            loginBtn.addEventListener('click', triggerLogin);
+        document.getElementById('ai-input').addEventListener('keydown', e => {
+            if (e.key === 'Enter') sendAI();
+        });
+
+        // ── AI CHAT ──────────────────────────────────────────────────────────
+        const aiChatHistory = [];
+        const DUCO_AI_SYSTEM = `You are DucoBOT, a friendly and knowledgeable Duino-Coin expert assistant. You are embedded in an unofficial fan-made Duino-Coin mining dashboard called Duco-Vision. Answer questions about Duino-Coin (DUCO) — including mining, the DUCO-S1 and DUCO-S1A algorithms, hardware (ESP32, Arduino AVR, Raspberry Pi Pico, PC CPU mining), the Kolka reward system, wallets, exchanges, pools, the community, and the official apps. Be concise, friendly and helpful. Use occasional emojis. If asked about unrelated topics, politely redirect to Duino-Coin topics. Never claim to be affiliated with the official Duino-Coin project.`;
+
+        async function sendAIChat() {
+            const input = document.getElementById('ai-chat-input');
+            const messages = document.getElementById('ai-chat-messages');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            input.disabled = true;
+            document.getElementById('ai-chat-send').disabled = true;
+
+            const userDiv = document.createElement('div');
+            userDiv.className = 'ai-chat-msg user';
+            userDiv.textContent = text;
+            messages.appendChild(userDiv);
+
+            const loadDiv = document.createElement('div');
+            loadDiv.className = 'ai-chat-msg bot loading';
+            loadDiv.textContent = '🪙 Thinking...';
+            messages.appendChild(loadDiv);
+            messages.scrollTop = messages.scrollHeight;
+
+            // Mascot thinking mode
+            const mascot = document.querySelector('.ai-mascot');
+            const eyesNormal = document.getElementById('eyes-normal');
+            const eyesThinking = document.getElementById('eyes-thinking');
+            if (mascot) mascot.classList.add('thinking');
+            if (eyesNormal) eyesNormal.style.opacity = '0';
+            if (eyesThinking) eyesThinking.style.opacity = '1';
+
+            aiChatHistory.push({ role: 'user', content: text });
+
+            try {
+                const _e='gAAAAABqSq9tHNtnE5rV9HhUrQ2-MyCacu0ouoob8fKmmungPZSsIad668dDi0RLAjbndulttRXnfs9dFKhPBdfP9l0WEs2-Pg4AE9fZv1YNJjeDB38CykJ2Cp4ljiiCphQK7Dh3XkMrL7h_5RIEFzh11bVbB_UOeZiQmfqBSSiBIJJR6kwx_bI=';
+                const _pw=['Duco','Vision','2026','!','Mascot'].join('');
+                const _bytes=CryptoJS.AES.decrypt(_e.replace(/-/g,'+').replace(/_/g,'/'),_pw);
+                const _p=[{join:()=>_bytes.toString(CryptoJS.enc.Utf8)}];
+                const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${_p.join('')}`,
+                        'HTTP-Referer': 'https://leanderott.github.io',
+                        'X-Title': 'Duco-Vision'
+                    },
+                    body: JSON.stringify({
+                        model: 'openrouter/free',
+                        max_tokens: 800,
+                        messages: [{ role: 'system', content: DUCO_AI_SYSTEM }, ...aiChatHistory]
+                    })
+                });
+                const data = await res.json();
+                const reply = data.choices?.[0]?.message?.content || 'Sorry, I could not get a response. 😕';
+                aiChatHistory.push({ role: 'assistant', content: reply });
+                loadDiv.className = 'ai-chat-msg bot';
+                loadDiv.textContent = reply;
+            } catch(e) {
+                console.error('AI Error:', e);
+                loadDiv.className = 'ai-chat-msg bot';
+                loadDiv.textContent = '❌ Error: ' + e.message;
+            }
+
+            // Stop thinking mode
+            if (mascot) mascot.classList.remove('thinking');
+            if (eyesNormal) eyesNormal.style.opacity = '1';
+            if (eyesThinking) eyesThinking.style.opacity = '0';
+
+            messages.scrollTop = messages.scrollHeight;
+            input.disabled = false;
+            document.getElementById('ai-chat-send').disabled = false;
+            input.focus();
         }
 
-        // Enter-Taste im Input-Feld abfangen
-        if (usernameInput) {
-            usernameInput.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter') {
-                    triggerLogin();
-                }
+        document.getElementById('ai-chat-input')?.addEventListener('keydown', e => {
+            if (e.key === 'Enter') sendAIChat();
+        });
+
+        // ── STAR RATING ───────────────────────────────────────────────────────
+        let currentRating = 0;
+        const stars = document.querySelectorAll('.star');
+        const ratingResult = document.getElementById('rating-result');
+        const ratingMessages = ['','😕 Poor','😐 Fair','🙂 Good','😊 Great','🤩 Amazing!'];
+
+        stars.forEach(star => {
+            star.addEventListener('mouseover', () => {
+                const v = parseInt(star.dataset.v);
+                stars.forEach(s => s.style.color = parseInt(s.dataset.v) <= v ? '#ffd700' : '#333');
             });
+            star.addEventListener('mouseleave', () => {
+                stars.forEach(s => s.style.color = parseInt(s.dataset.v) <= currentRating ? '#ffd700' : '#333');
+            });
+            star.addEventListener('click', () => {
+                currentRating = parseInt(star.dataset.v);
+                stars.forEach(s => s.style.color = parseInt(s.dataset.v) <= currentRating ? '#ffd700' : '#333');
+                ratingResult.textContent = ratingMessages[currentRating];
+                try { localStorage.setItem('duco_rating', currentRating); } catch(e) {}
+            });
+        });
+
+        // Load saved rating
+        try {
+            const saved = localStorage.getItem('duco_rating');
+            if (saved) {
+                currentRating = parseInt(saved);
+                stars.forEach(s => s.style.color = parseInt(s.dataset.v) <= currentRating ? '#ffd700' : '#333');
+                ratingResult.textContent = ratingMessages[currentRating];
+            }
+        } catch(e) {}
+
+        // ── LANGUAGE SYSTEM ──────────────────────────────────────────────────
+        const translations = {
+            en: {
+                balance: "Account Balance", miners: "Active Miners", hashrate: "Total Hashrate",
+                earnings: "Estimated Daily Earnings", milestone: "Next Milestone Progress",
+                hardware: "Hardware Breakdown", market: "Global DUCO Market Price",
+                chat: "Global Community Chat", chatinfo: "Connect with other Duino-Coin miners instantly.",
+                progress: "Progress", waiting: "Waiting for miners...", syncing: "Syncing...",
+                desc: "A real-time Duino-Coin mining dashboard. Track your balance, hashrate, miners and market price — all in one place. This is an unofficial fan-made tool and is not affiliated with or endorsed by the Duino-Coin project.",
+                donate: "Leave a Tip / Donations to leanderott",
+                rising: "Price Rising ▲", falling: "Price Falling ▼", stable: "Stable"
+            },
+            de: {
+                balance: "Kontostand", miners: "Aktive Miner", hashrate: "Gesamt-Hashrate",
+                earnings: "Geschätzter Tagesverdienst", milestone: "Nächstes Meilenstein-Ziel",
+                hardware: "Hardware-Übersicht", market: "Globaler DUCO Marktpreis",
+                chat: "Globaler Community-Chat", chatinfo: "Verbinde dich sofort mit anderen Duino-Coin Minern.",
+                progress: "Fortschritt", waiting: "Warte auf Miner...", syncing: "Synchronisierung...",
+                desc: "Ein Echtzeit-Dashboard für Duino-Coin Mining. Verfolge deinen Kontostand, Hashrate, Miner und Marktpreis — alles auf einen Blick. Dies ist ein inoffizielles Fan-Projekt und steht in keiner Verbindung zum offiziellen Duino-Coin Team.",
+                donate: "Trinkgeld / Spenden an leanderott",
+                rising: "Preis steigt ▲", falling: "Preis fällt ▼", stable: "Stabil"
+            },
+            fr: {
+                balance: "Solde du Compte", miners: "Mineurs Actifs", hashrate: "Hashrate Total",
+                earnings: "Gains Quotidiens Estimés", milestone: "Prochain Jalon",
+                hardware: "Aperçu du Matériel", market: "Prix Mondial du DUCO",
+                chat: "Chat Communautaire Global", chatinfo: "Connectez-vous instantanément avec d'autres mineurs.",
+                progress: "Progression", waiting: "En attente de mineurs...", syncing: "Synchronisation...",
+                desc: "Un tableau de bord en temps réel pour le minage Duino-Coin. Suivez votre solde, hashrate, mineurs et prix du marché. Ceci est un outil non officiel créé par un fan, sans affiliation avec le projet Duino-Coin.",
+                donate: "Laisser un pourboire / Dons à leanderott",
+                rising: "Prix en hausse ▲", falling: "Prix en baisse ▼", stable: "Stable"
+            }
+        };
+        let currentLang = 'en';
+
+        function setLang(lang) {
+            currentLang = lang;
+            const t = translations[lang];
+            document.querySelector('[data-expandable]:nth-child(1) h3').textContent = t.balance;
+            document.querySelectorAll('.stat-card h3')[1].textContent = t.miners;
+            document.querySelectorAll('.stat-card h3')[2].textContent = t.hashrate;
+            document.querySelectorAll('.stat-card h3')[3].textContent = t.earnings;
+            document.querySelector('#next-milestone-val').closest('.card').querySelector('h3').textContent = t.milestone;
+            document.getElementById('site-desc').textContent = t.desc;
+            document.querySelector('.comment-section h3').textContent = t.chat;
+            document.querySelector('.chat-info').textContent = t.chatinfo;
+            document.querySelector('.milestone-info span').textContent = t.progress;
+            document.querySelector('.rgb-btn').textContent = t.donate;
+        }
+
+        // ── THEME TOGGLE ─────────────────────────────────────────────────────
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const btn = document.getElementById('theme-toggle');
+            btn.textContent = document.body.classList.contains('light-mode') ? '☀️ Light' : '🌙 Dark';
         }
     </script>
 </body>
