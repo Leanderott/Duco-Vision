@@ -48,6 +48,7 @@ loginBtn.addEventListener('click', () => {
         dashboard.classList.remove('hidden');
         
         initChart();
+        initRatingSystem(); // Aktiviert das Durchschnitts-Sterne-System beim Login
         
         // Sofortige Abfrage beim Login
         fetchUserData();
@@ -227,7 +228,6 @@ function fetchUserData() {
                 let totalHashrate = 0;
                 let hardwareCounts = {};
                 let currentMinerCount = 0;
-                let formulaEarnings = 0;
                 calculatedDailyDuco = 0;
 
                 const miners = result.miners || [];
@@ -236,16 +236,11 @@ function fetchUserData() {
                     const hr = parseFloat(miner.hashrate) || 0;
                     totalHashrate += hr;
 
-                    const sharetime = parseFloat(miner.sharetime) || 1;
-                    const diff = parseFloat(miner.diff) || 0;
-                    const wd = parseFloat(miner.wd) || 0;
-                    // No reliable formula exists - use balance delta only
-
                     const software = miner.software || "Unknown Device";
                     hardwareCounts[software] = (hardwareCounts[software] || 0) + 1;
                 });
 
-                // Balance-Delta Berechnung (wie offizielle Wallet)
+                // --- ERZWUNGENE REINE BALANCE-DELTA BERECHNUNG ---
                 const now = Date.now();
                 balanceHistory.push({ balance: userBalance, time: now });
                 if (balanceHistory.length > 120) balanceHistory.shift(); // max 20 min history
@@ -256,19 +251,26 @@ function fetchUserData() {
                     const newest = balanceHistory[balanceHistory.length - 1];
                     const elapsedSeconds = (newest.time - oldest.time) / 1000;
                     const balanceDelta = newest.balance - oldest.balance;
-                    // Nur verwenden wenn mindestens 30 Sekunden gemessen und Balance gestiegen
-                    if (elapsedSeconds >= 30 && balanceDelta > 0) {
+                    
+                    // Berechnet das Daily Income rein aus der API-Kontostandsänderung
+                    if (elapsedSeconds >= 20 && balanceDelta >= 0) {
                         calculatedDailyDuco = (balanceDelta / elapsedSeconds) * 86400;
                         deltaWorked = true;
                     }
                 }
 
-                // Formel als Fallback bis genug Daten gesammelt sind
+                // Wartestatus ausgeben bis genug Daten vorliegen (Kein Formel-Fallback mehr!)
                 if (!deltaWorked) {
-                    // Show measuring message until balance delta kicks in
                     document.getElementById('estimated-earnings').innerHTML =
-                        `<span style="color:var(--text-muted);font-size:13px;">⏱ Measuring... (leave open for ~2 min)</span>`;
+                        `<span style="color:var(--text-muted);font-size:13px;">⏱ Measuring API Delta... (wait ~20s)</span>`;
                     document.getElementById('usd-earnings').innerHTML = '';
+                    
+                    // Miner-Anzahl und Hashrate trotzdem live anzeigen
+                    document.getElementById('miner-count').textContent = currentMinerCount;
+                    lastMinerCount = currentMinerCount;
+                    const hashrateKhas = totalHashrate / 1000;
+                    document.getElementById('total-hashrate').innerHTML = `${hashrateKhas.toFixed(4)} <span class="currency">KH/s</span>`;
+                    renderHardwareBreakdown(miners, currentMinerCount);
                     return;
                 }
 
@@ -281,42 +283,45 @@ function fetchUserData() {
                 }
                 lastMinerCount = currentMinerCount;
 
-                // Hashrate und geschätzte Gewinne anzeigen
+                // Hashrate und die aus der echten Balance-Änderung berechneten Gewinne anzeigen
                 const hashrateKhas = totalHashrate / 1000;
                 document.getElementById('total-hashrate').innerHTML = `${hashrateKhas.toFixed(4)} <span class="currency">KH/s</span>`;
-                if (calculatedDailyDuco > 0) {
-                    const label = deltaWorked ? '~' : '≈';
-                    document.getElementById('estimated-earnings').innerHTML =
-                        `${label}${calculatedDailyDuco.toFixed(8)} <span class="currency">DUCO</span>`;
-                }
+                
+                document.getElementById('estimated-earnings').innerHTML =
+                    `≈ ${calculatedDailyDuco.toFixed(4)} <span class="currency">DUCO</span>`;
 
                 // Hardware Breakdown rendern
-                const breakdownContainer = document.getElementById('hardware-breakdown');
-                if (currentMinerCount === 0) {
-                    breakdownContainer.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>`;
-                } else {
-                    breakdownContainer.innerHTML = "";
-                    miners.forEach((miner) => {
-                        const hr = (parseFloat(miner.hashrate) / 1000).toFixed(2);
-                        const software = miner.software || "Unknown Device";
-                        const identifier = miner.identifier && miner.identifier !== "None" ? ` · ${miner.identifier}` : ``;
-                        breakdownContainer.innerHTML += `
-                            <div class="hardware-item">
-                                <span>⚙️ ${software}${identifier}</span>
-                                <strong>${hr} KH/s</strong>
-                            </div>
-                        `;
-                    });
-                }
+                renderHardwareBreakdown(miners, currentMinerCount);
 
                 const dailyUsd = calculatedDailyDuco * currentPriceUsd;
-                document.getElementById('usd-earnings').innerHTML = `$${dailyUsd.toFixed(8)} <span class="currency">USD</span>`;
+                document.getElementById('usd-earnings').innerHTML = `$${dailyUsd.toFixed(6)} <span class="currency">USD</span>`;
             }
         },
         error: function(err) {
             console.error("User Data Fallback Sync failed:", err);
         }
     });
+}
+
+// Ausgelagerte Hilfsfunktion für den Hardware-Breakdown, um Code-Kompaktheit zu wahren
+function renderHardwareBreakdown(miners, currentMinerCount) {
+    const breakdownContainer = document.getElementById('hardware-breakdown');
+    if (currentMinerCount === 0) {
+        breakdownContainer.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>`;
+    } else {
+        breakdownContainer.innerHTML = "";
+        miners.forEach((miner) => {
+            const hr = (parseFloat(miner.hashrate) / 1000).toFixed(2);
+            const software = miner.software || "Unknown Device";
+            const identifier = miner.identifier && miner.identifier !== "None" ? ` · ${miner.identifier}` : ``;
+            breakdownContainer.innerHTML += `
+                <div class="hardware-item">
+                    <span>⚙️ ${software}${identifier}</span>
+                    <strong>${hr} KH/s</strong>
+                </div>
+            `;
+        });
+    }
 }
 
 // --- MARKT PREIS DIREKT ÜBER OFFIZIELLE APIS (DIREKT-AJAX FÜR DIAGRAMM) ---
@@ -347,7 +352,7 @@ function processMarketData(apiData) {
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
     const dailyUsd = calculatedDailyDuco * currentPriceUsd;
-    document.getElementById('usd-earnings').innerHTML = `$${dailyUsd.toFixed(8)} <span class="currency">USD</span>`;
+    document.getElementById('usd-earnings').innerHTML = `$${dailyUsd.toFixed(6)} <span class="currency">USD</span>`;
 
     if (priceChart.data.labels.length > 15) {
         priceChart.data.labels.shift();
@@ -369,4 +374,65 @@ function processMarketData(apiData) {
     
     lastPrice = currentPriceUsd;
     priceChart.update();
+}
+
+// --- GLOBALER BEWERTUNGS-DURCHSCHNITT (STERNE-SYSTEM) ---
+function initRatingSystem() {
+    const stars = document.querySelectorAll('#star-row .star');
+    
+    stars.forEach(star => {
+        star.onclick = function() {
+            const val = parseInt(this.getAttribute('data-v'));
+            
+            // Holt alle User-Ratings aus dem lokalen Verzeichnis
+            let allRatings = JSON.parse(safeGetItem('duco_global_ratings')) || {};
+            
+            // Speichert oder überschreibt die Bewertung exakt für DIESEN Username
+            allRatings[username] = val;
+            safeSetItem('duco_global_ratings', JSON.stringify(allRatings));
+            
+            // Aktualisiert sofort die Anzeige des berechneten Durchschnitts
+            updateStarsDisplay();
+        };
+    });
+
+    // Zeigt direkt beim Starten den echten Durchschnitt an
+    updateStarsDisplay();
+}
+
+function updateStarsDisplay() {
+    const stars = document.querySelectorAll('#star-row .star');
+    const result = document.getElementById('rating-result');
+    
+    let allRatings = JSON.parse(safeGetItem('duco_global_ratings')) || {};
+    let ratingsArray = Object.values(allRatings); // Extrahiert alle numerischen Sterne-Votes
+    
+    let average = 0;
+    let totalVotes = ratingsArray.length;
+    
+    if (totalVotes > 0) {
+        // Mathematischer Durchschnitt: Summe aller Sterne / Anzahl aller Personen, die abgestimmt haben
+        let sum = ratingsArray.reduce((a, b) => a + b, 0);
+        average = sum / totalVotes;
+    }
+
+    // Lässt Sterne basierend auf dem gerundeten globalen Durchschnitt leuchten
+    const roundedAverage = Math.round(average);
+    stars.forEach(s => {
+        if (parseInt(s.getAttribute('data-v')) <= roundedAverage) {
+            s.classList.add('active');
+        } else {
+            s.classList.remove('active');
+        }
+    });
+
+    // Textausgabe (prüft localStorage-Sprachen ab oder fällt auf Englisch zurück)
+    const currentLang = safeGetItem('duco_lang') || 'en';
+    if (currentLang === 'de') {
+        result.textContent = `Ø ${average.toFixed(1)} / 5 Sterne (${totalVotes} Stimmen)`;
+    } else if (currentLang === 'fr') {
+        result.textContent = `Moyenne: ${average.toFixed(1)} / 5 (${totalVotes} votes)`;
+    } else {
+        result.textContent = `Avg: ${average.toFixed(1)} / 5 stars (${totalVotes} votes)`;
+    }
 }
