@@ -1,376 +1,280 @@
-window.onload = function() {
-    document.getElementById('username-input').value = "";
-};
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duco-Vision Dashboard</title>
+    <!-- HIER IST DIE REPARIERTE VERKNÜPFUNG ZU DEINER STYLE.CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-let username = "";
-let priceChart;
-let lastPrice = 0;
-let lastMinerCount = -1; 
-let calculatedDailyDuco = 0;
-let currentPriceUsd = 0.00005;
-let liveBalance = 0;
-let liveEarningsPerSecond = 0;
-let liveCounterInterval = null;
-let balanceHistory = []; // [{balance, time}]
+    <!-- LOGIN SCREEN -->
+    <div id="login-overlay">
+        <div id="login-container">
+            <div id="login-ui">
+                <div class="cube-container">
+                    <div class="cube">
+                        <div class="face front">DUCO</div>
+                        <div class="face back">MINER</div>
+                        <div class="face right">💥</div>
+                        <div class="face left">💎</div>
+                        <div class="face top"></div>
+                        <div class="face bottom"></div>
+                    </div>
+                </div>
+                <h2>DUCO-VISION</h2>
+                <p>Gib deinen Duino-Coin Benutzernamen ein, um das Dashboard zu starten.</p>
+                <input type="text" id="login-name-input" placeholder="BENUTZERNAME..." autocomplete="off">
+                
+                <!-- Unsichtbares Fallback-System für die script.js -->
+                <div style="display: none;">
+                    <input type="text" id="username-input">
+                    <button id="login-btn">Login</button>
+                </div>
+            </div>
+            <div id="login-greet"></div>
+        </div>
+    </div>
 
-const milestones = [1, 100, 500, 1000, 10000, 100000, 1000000, 10000000, 100000000];
+    <!-- MAIN DASHBOARD -->
+    <div id="dashboard" class="hidden">
+        <header>
+            <div class="logo-area">
+                <div class="logo-dot"></div>
+                <h1>DUCO-VISION <span id="user-display"></span></h1>
+            </div>
+            <p id="site-desc">Ein Echtzeit-Duino-Coin-Mining-Dashboard. Verfolge dein Guthaben, deine Hashrate, Miner und den Marktpreis an einem Ort.</p>
+            <div class="controls">
+                <button class="control-btn" id="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
+                <div class="lang-selector">
+                    <button onclick="setLang('en')">EN</button>
+                    <button onclick="setLang('de')">DE</button>
+                    <button onclick="setLang('fr')">FR</button>
+                </div>
+            </div>
+        </header>
 
-const loginOverlay = document.getElementById('login-overlay');
-const dashboard = document.getElementById('dashboard');
-const usernameInput = document.getElementById('username-input');
-const loginBtn = document.getElementById('login-btn');
-const userDisplay = document.getElementById('user-display');
-const trendIndicator = document.getElementById('trend-indicator');
+        <!-- STATS GRID -->
+        <div class="stats-grid">
+            <!-- Account Balance (Expandable) -->
+            <div class="card stat-card" data-expandable onclick="toggleCard(this)">
+                <h3 data-translate="balance">Kontostand</h3>
+                <div class="value" id="account-balance">0.00 DUCO</div>
+                <div class="card-description">Hier siehst du dein aktuelles Gesamtguthaben auf der Duino-Coin Blockchain. Es aktualisiert sich automatisch im Hintergrund.</div>
+            </div>
 
-let memoryStorage = {};
+            <!-- Active Miners -->
+            <div class="card stat-card" data-expandable onclick="toggleCard(this)">
+                <h3 data-translate="miners">Aktive Miner</h3>
+                <div class="value" id="miner-count">0</div>
+                <div class="card-description">Die Anzahl der Geräte (wie ESP32, Arduinos oder Raspberry Pis), die aktuell aktiv unter deinem Namen minen.</div>
+            </div>
 
-function safeGetItem(key) {
-    try {
-        return localStorage.getItem(key);
-    } catch (e) {
-        return memoryStorage[key] || null;
-    }
-}
+            <!-- Total Hashrate -->
+            <div class="card stat-card" data-expandable onclick="toggleCard(this)">
+                <h3 data-translate="hashrate">Gesamte Hashrate</h3>
+                <div class="value" id="total-hashrate">0 kH/s</div>
+                <div class="card-description">Die kombinierte Rechenleistung all deiner aktiven Mining-Geräte, gemessen in Kilohashes pro Sekunde.</div>
+            </div>
 
-function safeSetItem(key, value) {
-    try {
-        localStorage.setItem(key, value);
-    } catch (e) {
-        memoryStorage[key] = value;
-    }
-}
+            <!-- Estimated Earnings -->
+            <div class="card stat-card" data-expandable onclick="toggleCard(this)">
+                <h3 data-translate="earnings">Geschätzter Tagesverdienst</h3>
+                <div class="value" id="estimated-earnings">0.00 DUCO / Tag</div>
+                <div class="card-description">Eine Hochrechnung basierend auf deiner aktuellen Hashrate, wie viele Coins du in den nächsten 24 Stunden generieren wirst.</div>
+            </div>
+        </div>
 
-loginBtn.addEventListener('click', () => {
-    username = usernameInput.value.trim();
-    if (username !== "") {
-        userDisplay.textContent = `@${username.toUpperCase()}`;
-        loginOverlay.classList.add('hidden');
-        dashboard.classList.remove('hidden');
-        
-        initChart();
-        
-        // Sofortige Abfrage beim Login
-        fetchUserData();
-        fetchGlobalMarket();
-        
-        // Getrennte Intervalle: Alle 10 Sekunden (Absolut stabil und laggfrei)
-        setInterval(fetchUserData, 10000);
-        setInterval(fetchGlobalMarket, 10000);
+        <!-- LOWER SECTION -->
+        <div class="lower-section">
+            <!-- Progress & Price Chart -->
+            <div class="main-content">
+                <div class="card">
+                    <h3 data-translate="milestone">Nächster Meilenstein</h3>
+                    <div class="value" id="next-milestone-val" style="font-size: 24px; margin-bottom: 10px;">0 / 100 DUCO</div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="milestone-progress" style="width: 0%;"></div>
+                    </div>
+                    <div class="milestone-info">
+                        <span data-translate="progress">Fortschritt</span>
+                        <span id="milestone-percent">0%</span>
+                    </div>
+                </div>
 
-    } else {
-        alert("Please enter a valid Duino-Coin username.");
-    }
-});
+                <!-- Price Card -->
+                <div class="card price-card">
+                    <h3>DUCO Marktpreis</h3>
+                    <div class="price-row">
+                        <div class="value" id="duco-price">$0.000000</div>
+                        <span class="price-trend trend-stable" id="price-trend" data-translate="stable">Stabil</span>
+                    </div>
+                </div>
+            </div>
 
-function playSound(type) {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
-    if (type === 'achievement') {
-        const notes = [130.81, 164.81, 196.00, 261.63, 329.63, 392.00, 523.25]; 
-        notes.forEach((freq, index) => {
-            setTimeout(() => {
-                let osc = audioCtx.createOscillator();
-                let gain = audioCtx.createGain();
-                osc.type = 'triangle'; 
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.8);
-            }, index * 80); 
-        });
-    } else if (type === 'alarm') {
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-        osc.frequency.linearRampToValueAtTime(90, audioCtx.currentTime + 0.4);
-        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.4);
-    }
-}
+            <!-- Sidebar with Live Chat & Donation -->
+            <div class="sidebar">
+                <div class="card chat-card">
+                    <h3 data-translate="chat">💬 Live Chat</h3>
+                    <p data-translate="chatinfo" style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Unterhalte dich mit anderen Duco-Vision Nutzern in Echtzeit.</p>
+                    <div class="chat-messages" id="chat-box">
+                        <!-- Nachrichten werden hier generiert -->
+                    </div>
+                    <div class="chat-input-row">
+                        <input type="text" id="chat-input" placeholder="Nachricht schreiben..." autocomplete="off">
+                        <button id="send-chat-btn">➔</button>
+                    </div>
+                </div>
 
-function triggerAchievementNotification(milestoneValue) {
-    const popup = document.getElementById('achievement-popup');
-    document.getElementById('achievement-text').innerHTML = `You just passed the <strong>${milestoneValue.toLocaleString()} DUCO</strong> Milestone!`;
-    
-    playSound('achievement');
-    popup.classList.add('show');
-    
-    setTimeout(() => { popup.classList.remove('show'); }, 5000);
-}
+                <!-- Support Card -->
+                <div class="card support-card">
+                    <button class="rgb-btn" onclick="openDonateModal()" data-translate="donate">Duco spenden zur Unterstützung</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-function handleMilestones(currentBalance) {
-    let currentTarget = milestones[0];
-    let previousTarget = 0;
-    
-    for (let i = 0; i < milestones.length; i++) {
-        if (currentBalance < milestones[i]) {
-            currentTarget = milestones[i];
-            previousTarget = i > 0 ? milestones[i-1] : 0;
-            break;
-        }
-    }
-    
-    let savedMilestone = safeGetItem(`duco_milestone_${username}`);
-    if (savedMilestone && parseFloat(savedMilestone) < currentTarget && previousTarget > 0) {
-        if (currentBalance >= previousTarget && parseFloat(savedMilestone) < previousTarget) {
-            triggerAchievementNotification(previousTarget);
-        }
-    }
-    safeSetItem(`duco_milestone_${username}`, currentTarget);
+    <!-- MULTI-FUNCTIONAL MODAL / DETAILS VIEW -->
+    <div id="modal-overlay" onclick="closeModal()"></div>
+    <div id="details-modal">
+        <button class="close-btn" onclick="closeModal()">×</button>
+        <div id="modal-content"></div>
+    </div>
 
-    document.getElementById('next-milestone-val').textContent = `${currentTarget.toLocaleString()} DUCO`;
-    let range = currentTarget - previousTarget;
-    let progressInRange = currentBalance - previousTarget;
-    let percent = (progressInRange / range) * 100;
-    if (percent < 0) percent = 0;
-    if (percent > 100) percent = 100;
-    
-    document.getElementById('milestone-progress').style.width = `${percent}%`;
-}
+    <!-- JAVASCRIPT LOGIK-BRÜCKE -->
+    <script>
+        const nameInput = document.getElementById('login-name-input');
+        const fallbackInput = document.getElementById('username-input');
+        const fallbackBtn = document.getElementById('login-btn');
+        const loginOverlay = document.getElementById('login-overlay');
+        const greetDiv = document.getElementById('login-greet');
+        const dashboard = document.getElementById('dashboard');
 
-function initChart() {
-    const ctx = document.getElementById('priceChart').getContext('2d');
-    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-    gradient.addColorStop(0, 'rgba(255, 102, 0, 0.35)');
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
-    priceChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [], 
-            datasets: [{
-                label: 'Global Price (USD)',
-                data: [],
-                borderColor: '#ff6600', 
-                backgroundColor: gradient,
-                borderWidth: 3,
-                tension: 0.4,
-                pointRadius: 2,
-                pointBackgroundColor: '#ffffff',
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: { grid: { color: '#111111' }, ticks: { color: '#555' } },
-                y: { 
-                    grid: { color: '#111111' }, 
-                    ticks: { 
-                        color: '#555',
-                        callback: function(value) { return '$' + value.toFixed(12); }
-                    } 
-                }
-            },
-            plugins: { legend: { display: false } }
-        }
-    });
-}
-
-function updateChartColor(trend, currentPrice) {
-    if (!priceChart || !priceChart.data.datasets[0]) return;
-    const ctx = document.getElementById('priceChart').getContext('2d');
-    let newGradient = ctx.createLinearGradient(0, 0, 0, 300);
-    
-    if (trend === 'up') {
-        priceChart.data.datasets[0].borderColor = '#00ff00'; 
-        newGradient.addColorStop(0, 'rgba(0, 255, 0, 0.2)');
-        newGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        trendIndicator.textContent = `Price Rising ▲ ($${currentPrice.toFixed(12)})`;
-        trendIndicator.className = "trend-up";
-    } else if (trend === 'down') {
-        priceChart.data.datasets[0].borderColor = '#ff0000'; 
-        newGradient.addColorStop(0, 'rgba(255, 0, 0, 0.2)');
-        newGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        trendIndicator.textContent = `Price Falling ▼ ($${currentPrice.toFixed(12)})`;
-        trendIndicator.className = "trend-down";
-    } else {
-        priceChart.data.datasets[0].borderColor = '#ff6600'; 
-        newGradient.addColorStop(0, 'rgba(255, 102, 0, 0.2)');
-        newGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        trendIndicator.textContent = `Stable ($${currentPrice.toFixed(12)})`;
-        trendIndicator.className = "trend-neutral";
-    }
-    
-    priceChart.data.datasets[0].backgroundColor = newGradient;
-    priceChart.update();
-}
-
-// --- USER-DATEN MIT CLOUDFLARE-COMPATIBLE FALLBACK ---
-function fetchUserData() {
-    // Wenn du einen eigenen Cloudflare Worker nutzt, ändere die URL zu deinem Worker!
-    // Bis dahin nutzen wir den robusten Allorigins-Proxy, der Cloudflare-Anfragen besser tunnelt als corsproxy.io
-    const targetUrl = `https://server.duinocoin.com/v2/users/${username}`;
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-
-    $.ajax({
-        url: proxyUrl,
-        method: 'GET',
-        dataType: 'json',
-        success: function(response) {
-            // Allorigins kapselt die Antwort in einem "contents" String
-            let userData;
-            try {
-                userData = JSON.parse(response.contents);
-            } catch(e) {
-                console.error("Parsing failed, Cloudflare block suspected.");
-                return;
-            }
-
-            if (userData && userData.success && userData.result) {
-                const result = userData.result;
-
-                // Balance ausgeben (mit formatiertem USD-Wert darunter)
-                const userBalance = parseFloat(result.balance.balance) || 0;
-                liveBalance = userBalance;
-                const balanceUsd = userBalance * currentPriceUsd;
-                document.getElementById('account-balance').innerHTML =
-                    `${userBalance.toFixed(8)} <span class="currency">DUCO</span><br><span style="font-size:14px;color:var(--text-muted);">≈ $${balanceUsd.toFixed(6)} USD</span>`;
-                handleMilestones(userBalance);
-
-                // Miner Berechnungen
-                let totalHashrate = 0;
-                let hardwareCounts = {};
-                let currentMinerCount = 0;
-                calculatedDailyDuco = 0;
-
-                const miners = result.miners || [];
-                miners.forEach(miner => {
-                    currentMinerCount++;
-                    const hr = parseFloat(miner.hashrate) || 0;
-                    totalHashrate += hr;
-
-                    const software = miner.software || "Unknown Device";
-                    hardwareCounts[software] = (hardwareCounts[software] || 0) + 1;
-                });
-
-                // Balance-Delta Berechnung
-                const now = Date.now();
-                balanceHistory.push({ balance: userBalance, time: now });
-                if (balanceHistory.length > 120) balanceHistory.shift(); 
-
-                let deltaWorked = false;
-                if (balanceHistory.length >= 2) {
-                    const oldest = balanceHistory[0];
-                    const newest = balanceHistory[balanceHistory.length - 1];
-                    const elapsedSeconds = (newest.time - oldest.time) / 1000;
-                    const balanceDelta = newest.balance - oldest.balance;
-                    if (elapsedSeconds >= 30 && balanceDelta > 0) {
-                        calculatedDailyDuco = (balanceDelta / elapsedSeconds) * 86400;
-                        deltaWorked = true;
+        if (nameInput) {
+            nameInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const username = nameInput.value.trim();
+                    if (username !== "") {
+                        // Daten an script.js übergeben
+                        fallbackInput.value = username;
+                        
+                        // Login-UI ausblenden und Animation starten
+                        nameInput.disabled = true;
+                        document.getElementById('login-ui').style.opacity = '0';
+                        
+                        greetDiv.textContent = `WELCOME, ${username.toUpperCase()}`;
+                        greetDiv.style.opacity = '1';
+                        
+                        // Dashboard nach der Animation sichtbar machen und API starten
+                        setTimeout(() => {
+                            loginOverlay.classList.add('bg-mode');
+                            dashboard.classList.remove('hidden');
+                            fallbackBtn.click();
+                        }, 1800);
+                    } else {
+                        alert("Bitte gib einen gültigen Duino-Coin Namen ein.");
                     }
-                }
-
-                if (!deltaWorked) {
-                    document.getElementById('estimated-earnings').innerHTML =
-                        `<span style="color:var(--text-muted);font-size:13px;">⏱ Measuring... (leave open for ~2 min)</span>`;
-                    document.getElementById('usd-earnings').innerHTML = '';
-                    return;
-                }
-
-                liveEarningsPerSecond = calculatedDailyDuco / 86400;
-
-                document.getElementById('miner-count').textContent = currentMinerCount;
-                if (lastMinerCount !== -1 && currentMinerCount < lastMinerCount) {
-                    playSound('alarm');
-                }
-                lastMinerCount = currentMinerCount;
-
-                const hashrateKhas = totalHashrate / 1000;
-                document.getElementById('total-hashrate').innerHTML = `${hashrateKhas.toFixed(4)} <span class="currency">KH/s</span>`;
-                if (calculatedDailyDuco > 0) {
-                    const label = deltaWorked ? '~' : '≈';
-                    document.getElementById('estimated-earnings').innerHTML =
-                        `${label}${calculatedDailyDuco.toFixed(8)} <span class="currency">DUCO</span>`;
-                }
-
-                const breakdownContainer = document.getElementById('hardware-breakdown');
-                if (currentMinerCount === 0) {
-                    breakdownContainer.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>`;
-                } else {
-                    breakdownContainer.innerHTML = "";
-                    miners.forEach((miner) => {
-                        const hr = (parseFloat(miner.hashrate) / 1000).toFixed(2);
-                        const software = miner.software || "Unknown Device";
-                        const identifier = miner.identifier && miner.identifier !== "None" ? ` · ${miner.identifier}` : ``;
-                        breakdownContainer.innerHTML += `
-                            <div class="hardware-item">
-                                <span>⚙️ ${software}${identifier}</span>
-                                <strong>${hr} KH/s</strong>
-                            </div>
-                        `;
-                    });
-                }
-
-                const dailyUsd = calculatedDailyDuco * currentPriceUsd;
-                document.getElementById('usd-earnings').innerHTML = `$${dailyUsd.toFixed(8)} <span class="currency">USD</span>`;
-            }
-        },
-        error: function(err) {
-            console.error("User Data Sync failed:", err);
-        }
-    });
-}
-
-// --- MARKT PREIS DIREKT ÜBER GITHUB-API (UMGEHT CLOUDFLARE BLOCK DER HAUPT-API) ---
-function fetchGlobalMarket() {
-    // Da server.duinocoin.com/api.json oft unter Cloudflare-Schutz steht, fragen wir primär das GitHub-Spiegel-Repository ab. 
-    // GitHub Pages blockiert keine regulären AJAX-Anfragen und hat kein Cloudflare davor geschaltet.
-    $.ajax({
-        url: 'https://raw.githubusercontent.com/revoxhere/duino-coin/gh-pages/api.json',
-        method: 'GET',
-        dataType: 'json',
-        success: function(apiData) {
-            processMarketData(apiData);
-        },
-        error: function() {
-            // Ausweichmanöver auf die Haupt-API falls GitHub offline sein sollte
-            $.ajax({
-                url: 'https://server.duinocoin.com/api.json',
-                method: 'GET',
-                dataType: 'json',
-                success: function(apiData) {
-                    processMarketData(apiData);
                 }
             });
         }
-    });
-}
 
-function processMarketData(apiData) {
-    currentPriceUsd = apiData["Duco price"] || 0.00005;
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        // --- MODAL SYSTEM FIX ---
+        const modal = document.getElementById('details-modal');
+        const overlay = document.getElementById('modal-overlay');
+        const modalContent = document.getElementById('modal-content');
 
-    const dailyUsd = calculatedDailyDuco * currentPriceUsd;
-    document.getElementById('usd-earnings').innerHTML = `$${dailyUsd.toFixed(8)} <span class="currency">USD</span>`;
-
-    if (priceChart.data.labels.length > 15) {
-        priceChart.data.labels.shift();
-        priceChart.data.datasets[0].data.shift();
-    }
-
-    priceChart.data.labels.push(currentTime);
-    priceChart.data.datasets[0].data.push(currentPriceUsd);
-
-    if (lastPrice !== 0) {
-        if (currentPriceUsd > lastPrice) {
-            updateChartColor('up', currentPriceUsd);
-        } else if (currentPriceUsd < lastPrice) {
-            updateChartColor('down', currentPriceUsd);
+        function toggleCard(card) {
+            if (window.innerWidth <= 768) {
+                openModal(card);
+            } else {
+                card.classList.toggle('expanded');
+            }
         }
-    } else {
-        updateChartColor('neutral', currentPriceUsd);
-    }
-    
-    lastPrice = currentPriceUsd;
-    priceChart.update();
-}
+
+        function openModal(card) {
+            const title = card.querySelector('h3') ? card.querySelector('h3').textContent : '';
+            const value = card.querySelector('.value') ? card.querySelector('.value').innerHTML : '';
+            const desc = card.querySelector('.card-description') ? card.querySelector('.card-description').textContent : '';
+            
+            modalContent.innerHTML = `
+                <h3 style="margin-top:0; color:var(--accent-color); text-transform:uppercase; font-size:14px;">${title}</h3>
+                <div class="value" style="font-size:28px; font-weight:bold; margin: 10px 0;">${value}</div>
+                <div class="card-description" style="display:block; font-size:13px; color:var(--text-muted); line-height:1.6;">${desc}</div>
+            `;
+
+            modal.style.opacity = '1';
+            modal.style.pointerEvents = 'all';
+            modal.style.transform = 'translate(-50%, -50%) scale(1)';
+            overlay.classList.add('active');
+        }
+
+        function closeModal() {
+            modal.style.opacity = '0';
+            modal.style.pointerEvents = 'none';
+            modal.style.transform = 'translate(-50%, -50%) scale(0.9)';
+            overlay.classList.remove('active');
+        }
+
+        function openDonateModal() {
+            modalContent.innerHTML = `
+                <h3 style="margin-top:0; color:var(--accent-color); text-transform:uppercase; font-size:14px;">Support das Projekt</h3>
+                <div class="value" style="font-size:20px; margin: 15px 0;">Spende Duino-Coin an: <strong style="color:#fff;">LandoOtt</strong></div>
+                <div class="card-description" style="display:block; font-size:13px; color:var(--text-muted);">Jeder DUCO hilft dabei, die Server am Laufen zu halten und neue Features zu entwickeln! Vielen Dank für deinen Support!</div>
+            `;
+            modal.style.opacity = '1';
+            modal.style.pointerEvents = 'all';
+            modal.style.transform = 'translate(-50%, -50%) scale(1)';
+            overlay.classList.add('active');
+        }
+
+        // --- MULTI-LANGUAGE TRANSLATIONS ---
+        const translations = {
+            en: {
+                balance: "Account Balance", miners: "Active Miners", hashrate: "Total Hashrate",
+                earnings: "Estimated Daily Earnings", milestone: "Next Milestone Progress",
+                desc: "A real-time Duino-Coin mining dashboard. Track your balance, hashrate, miners and market price — all in one place.",
+                chat: "💬 Live Chat", chatinfo: "Talk with other Duco-Vision users in real-time.",
+                progress: "Progress", donate: "Donate Duco to support",
+                rising: "Price Rising ▲", falling: "Price Falling ▼", stable: "Stable"
+            },
+            de: {
+                balance: "Kontostand", miners: "Aktive Miner", hashrate: "Gesamte Hashrate",
+                earnings: "Geschätzter Tagesverdienst", milestone: "Nächster Meilenstein",
+                desc: "Ein Echtzeit-Duino-Coin-Mining-Dashboard. Verfolge dein Guthaben, deine Hashrate, Miner und den Marktpreis an einem Ort.",
+                chat: "💬 Live Chat", chatinfo: "Unterhalte dich mit anderen Duco-Vision Nutzern in Echtzeit.",
+                progress: "Fortschritt", donate: "Duco spenden zur Unterstützung",
+                rising: "Preis steigt ▲", falling: "Preis fällt ▼", stable: "Stabil"
+            },
+            fr: {
+                balance: "Solde du compte", miners: "Mineurs actifs", hashrate: "Hashrate total",
+                earnings: "Gains journaliers estimés", milestone: "Progression du jalon",
+                desc: "Un tableau de bord de minage Duino-Coin en temps réel. Suivez votre solde, votre hashrate, vos mineurs et le prix du marché.",
+                chat: "💬 Chat en direct", chatinfo: "Discutez avec d'autres utilisateurs de Duco-Vision en temps réel.",
+                progress: "Progression", donate: "Faire un don Duco pour soutenir",
+                rising: "Prix en hausse ▲", falling: "Prix en baisse ▼", stable: "Stable"
+            }
+        };
+
+        function setLang(lang) {
+            const t = translations[lang];
+            if (!t) return;
+            document.getElementById('site-desc').textContent = t.desc;
+            document.querySelector('[data-translate="balance"]').textContent = t.balance;
+            document.querySelector('[data-translate="miners"]').textContent = t.miners;
+            document.querySelector('[data-translate="hashrate"]').textContent = t.hashrate;
+            document.querySelector('[data-translate="earnings"]').textContent = t.earnings;
+            document.querySelector('[data-translate="milestone"]').textContent = t.milestone;
+            document.querySelector('[data-translate="chat"]').textContent = t.chat;
+            document.querySelector('[data-translate="chatinfo"]').textContent = t.chatinfo;
+            document.querySelector('[data-translate="progress"]').textContent = t.progress;
+            document.querySelector('[data-translate="donate"]').textContent = t.donate;
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const btn = document.getElementById('theme-toggle');
+            btn.textContent = document.body.classList.contains('light-mode') ? '☀️ Light' : '🌙 Dark';
+        }
+    </script>
+</body>
+</html>
