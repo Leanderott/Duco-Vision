@@ -11,7 +11,7 @@ let currentPriceUsd = 0.00005;
 let liveBalance = 0;
 let liveEarningsPerSecond = 0;
 let liveCounterInterval = null;
-let balanceHistory = []; // [{balance, time}]
+let balanceHistory = []; // Speichert [{balance, time}] im Duco-Monitor-Stil
 
 const milestones = [1, 100, 500, 1000, 10000, 100000, 1000000, 10000000, 100000000];
 
@@ -23,6 +23,27 @@ const userDisplay = document.getElementById('user-display');
 const trendIndicator = document.getElementById('trend-indicator');
 
 let memoryStorage = {};
+
+// --- HILFSFUNKTION FÜR HARDWARE BREAKDOWN ---
+function renderHardwareBreakdown(miners, currentMinerCount) {
+    const breakdownContainer = document.getElementById('hardware-breakdown');
+    if (currentMinerCount === 0) {
+        breakdownContainer.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>`;
+    } else {
+        breakdownContainer.innerHTML = "";
+        miners.forEach((miner) => {
+            const hr = (parseFloat(miner.hashrate) / 1000).toFixed(2);
+            const software = miner.software || "Unknown Device";
+            const identifier = miner.identifier && miner.identifier !== "None" ? ` · ${miner.identifier}` : ``;
+            breakdownContainer.innerHTML += `
+                <div class="hardware-item">
+                    <span>⚙️ ${software}${identifier}</span>
+                    <strong>${hr} KH/s</strong>
+                </div>
+            `;
+        });
+    }
+}
 
 function safeGetItem(key) {
     try {
@@ -240,32 +261,42 @@ function fetchUserData() {
                     hardwareCounts[software] = (hardwareCounts[software] || 0) + 1;
                 });
 
-                // --- ERZWUNGENE REINE BALANCE-DELTA BERECHNUNG ---
+                // --- SIUNUS / DUCO MONITOR BALANCE-DELTA RECHNER ---
                 const now = Date.now();
-                balanceHistory.push({ balance: userBalance, time: now });
-                if (balanceHistory.length > 120) balanceHistory.shift(); // max 20 min history
+                
+                if (balanceHistory.length === 0) {
+                    // Erster Fixpunkt direkt beim Login
+                    balanceHistory.push({ balance: userBalance, time: now });
+                } else if (balanceHistory[balanceHistory.length - 1].balance !== userBalance) {
+                    // Neuer Wert wird nur angehängt, wenn die API neue Blöcke verbucht hat
+                    balanceHistory.push({ balance: userBalance, time: now });
+                }
+                
+                // Verlaufshistorie kompakt halten
+                if (balanceHistory.length > 50) balanceHistory.shift(); 
 
                 let deltaWorked = false;
+                
+                // Berechnung erfolgt immer stabil zwischen dem ersten aufgezeichneten Login-Wert und dem Jetzt-Zustand
                 if (balanceHistory.length >= 2) {
                     const oldest = balanceHistory[0];
                     const newest = balanceHistory[balanceHistory.length - 1];
+                    
                     const elapsedSeconds = (newest.time - oldest.time) / 1000;
                     const balanceDelta = newest.balance - oldest.balance;
                     
-                    // Berechnet das Daily Income rein aus der API-Kontostandsänderung
-                    if (elapsedSeconds >= 20 && balanceDelta >= 0) {
+                    if (elapsedSeconds > 0 && balanceDelta > 0) {
                         calculatedDailyDuco = (balanceDelta / elapsedSeconds) * 86400;
                         deltaWorked = true;
                     }
                 }
 
-                // Wartestatus ausgeben bis genug Daten vorliegen (Kein Formel-Fallback mehr!)
+                // Wartestatus anzeigen, falls die API beim ersten Aufruf noch keinen Zuwachs hat
                 if (!deltaWorked) {
                     document.getElementById('estimated-earnings').innerHTML =
-                        `<span style="color:var(--text-muted);font-size:13px;">⏱ Measuring API Delta... (wait ~20s)</span>`;
+                        `<span style="color:var(--text-muted);font-size:13px;">⏱ Waiting for next block... (Calculating)</span>`;
                     document.getElementById('usd-earnings').innerHTML = '';
                     
-                    // Miner-Anzahl und Hashrate trotzdem live anzeigen
                     document.getElementById('miner-count').textContent = currentMinerCount;
                     lastMinerCount = currentMinerCount;
                     const hashrateKhas = totalHashrate / 1000;
@@ -283,7 +314,7 @@ function fetchUserData() {
                 }
                 lastMinerCount = currentMinerCount;
 
-                // Hashrate und die aus der echten Balance-Änderung berechneten Gewinne anzeigen
+                // Hashrate und berechnete Gewinne anzeigen
                 const hashrateKhas = totalHashrate / 1000;
                 document.getElementById('total-hashrate').innerHTML = `${hashrateKhas.toFixed(4)} <span class="currency">KH/s</span>`;
                 
@@ -303,27 +334,6 @@ function fetchUserData() {
     });
 }
 
-// Ausgelagerte Hilfsfunktion für den Hardware-Breakdown, um Code-Kompaktheit zu wahren
-function renderHardwareBreakdown(miners, currentMinerCount) {
-    const breakdownContainer = document.getElementById('hardware-breakdown');
-    if (currentMinerCount === 0) {
-        breakdownContainer.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>`;
-    } else {
-        breakdownContainer.innerHTML = "";
-        miners.forEach((miner) => {
-            const hr = (parseFloat(miner.hashrate) / 1000).toFixed(2);
-            const software = miner.software || "Unknown Device";
-            const identifier = miner.identifier && miner.identifier !== "None" ? ` · ${miner.identifier}` : ``;
-            breakdownContainer.innerHTML += `
-                <div class="hardware-item">
-                    <span>⚙️ ${software}${identifier}</span>
-                    <strong>${hr} KH/s</strong>
-                </div>
-            `;
-        });
-    }
-}
-
 // --- MARKT PREIS DIREKT ÜBER OFFIZIELLE APIS (DIREKT-AJAX FÜR DIAGRAMM) ---
 function fetchGlobalMarket() {
     $.ajax({
@@ -334,7 +344,6 @@ function fetchGlobalMarket() {
             processMarketData(apiData);
         },
         error: function() {
-            // Offizieller Zweitkanal über den Github-Spiegel bei Serverausfall
             $.ajax({
                 url: 'https://raw.githubusercontent.com/revoxhere/duino-coin/gh-pages/api.json',
                 method: 'GET',
@@ -384,19 +393,14 @@ function initRatingSystem() {
         star.onclick = function() {
             const val = parseInt(this.getAttribute('data-v'));
             
-            // Holt alle User-Ratings aus dem lokalen Verzeichnis
             let allRatings = JSON.parse(safeGetItem('duco_global_ratings')) || {};
-            
-            // Speichert oder überschreibt die Bewertung exakt für DIESEN Username
             allRatings[username] = val;
             safeSetItem('duco_global_ratings', JSON.stringify(allRatings));
             
-            // Aktualisiert sofort die Anzeige des berechneten Durchschnitts
             updateStarsDisplay();
         };
     });
 
-    // Zeigt direkt beim Starten den echten Durchschnitt an
     updateStarsDisplay();
 }
 
@@ -405,18 +409,16 @@ function updateStarsDisplay() {
     const result = document.getElementById('rating-result');
     
     let allRatings = JSON.parse(safeGetItem('duco_global_ratings')) || {};
-    let ratingsArray = Object.values(allRatings); // Extrahiert alle numerischen Sterne-Votes
+    let ratingsArray = Object.values(allRatings);
     
     let average = 0;
     let totalVotes = ratingsArray.length;
     
     if (totalVotes > 0) {
-        // Mathematischer Durchschnitt: Summe aller Sterne / Anzahl aller Personen, die abgestimmt haben
         let sum = ratingsArray.reduce((a, b) => a + b, 0);
         average = sum / totalVotes;
     }
 
-    // Lässt Sterne basierend auf dem gerundeten globalen Durchschnitt leuchten
     const roundedAverage = Math.round(average);
     stars.forEach(s => {
         if (parseInt(s.getAttribute('data-v')) <= roundedAverage) {
@@ -426,7 +428,6 @@ function updateStarsDisplay() {
         }
     });
 
-    // Textausgabe (prüft localStorage-Sprachen ab oder fällt auf Englisch zurück)
     const currentLang = safeGetItem('duco_lang') || 'en';
     if (currentLang === 'de') {
         result.textContent = `Ø ${average.toFixed(1)} / 5 Sterne (${totalVotes} Stimmen)`;
