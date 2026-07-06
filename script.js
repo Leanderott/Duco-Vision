@@ -239,9 +239,7 @@ function fetchUserData() {
                     const sharetime = parseFloat(miner.sharetime) || 1;
                     const diff = parseFloat(miner.diff) || 0;
                     const wd = parseFloat(miner.wd) || 0;
-                    // Unified formula: wd for ESP32, diff/2 for AVR, calibrated to ~22 DUCO/day
-                    const rawVal = wd > 0 ? wd / sharetime : diff / (sharetime * 2);
-                    formulaEarnings += rawVal * 86400 / 4167470;
+                    // No reliable formula exists - use balance delta only
 
                     const software = miner.software || "Unknown Device";
                     hardwareCounts[software] = (hardwareCounts[software] || 0) + 1;
@@ -266,8 +264,12 @@ function fetchUserData() {
                 }
 
                 // Formel als Fallback bis genug Daten gesammelt sind
-                if (!deltaWorked && formulaEarnings > 0) {
-                    calculatedDailyDuco = formulaEarnings;
+                if (!deltaWorked) {
+                    // Show measuring message until balance delta kicks in
+                    document.getElementById('estimated-earnings').innerHTML =
+                        `<span style="color:var(--text-muted);font-size:13px;">⏱ Measuring... (leave open for ~2 min)</span>`;
+                    document.getElementById('usd-earnings').innerHTML = '';
+                    return;
                 }
 
                 liveEarningsPerSecond = calculatedDailyDuco / 86400;
