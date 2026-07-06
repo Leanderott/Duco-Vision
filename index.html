@@ -4,276 +4,143 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Duco-Vision Dashboard</title>
-    <!-- HIER IST DIE REPARIERTE VERKNÜPFUNG ZU DEINER STYLE.CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- LOGIN SCREEN -->
-    <div id="login-overlay">
-        <div id="login-container">
-            <div id="login-ui">
-                <div class="cube-container">
-                    <div class="cube">
-                        <div class="face front">DUCO</div>
-                        <div class="face back">MINER</div>
-                        <div class="face right">💥</div>
-                        <div class="face left">💎</div>
-                        <div class="face top"></div>
-                        <div class="face bottom"></div>
-                    </div>
-                </div>
-                <h2>DUCO-VISION</h2>
-                <p>Gib deinen Duino-Coin Benutzernamen ein, um das Dashboard zu starten.</p>
-                <input type="text" id="login-name-input" placeholder="BENUTZERNAME..." autocomplete="off">
-                
-                <!-- Unsichtbares Fallback-System für die script.js -->
-                <div style="display: none;">
-                    <input type="text" id="username-input">
-                    <button id="login-btn">Login</button>
-                </div>
+    <!-- --- LOGIN SCREEN --- -->
+    <div class="login-container" id="login-overlay">
+        <div class="login-box">
+            <div class="duco-logo-bg">
+                <!-- Falls du ein Logo hast, zieht es den Glow-Effekt -->
+                <img src="" alt="" onerror="this.style.display='none'">
             </div>
-            <div id="login-greet"></div>
+            <h2>DUCO-VISION</h2>
+            <div class="login-subtitle">Gib deinen Duino-Coin Namen ein</div>
+            
+            <div class="input-group">
+                <input type="text" id="username-input" placeholder="BENUTZERNAME..." autocomplete="off">
+            </div>
+            <button id="login-btn">LOGIN</button>
         </div>
     </div>
 
-    <!-- MAIN DASHBOARD -->
-    <div id="dashboard" class="hidden">
-        <header>
-            <div class="logo-area">
-                <div class="logo-dot"></div>
-                <h1>DUCO-VISION <span id="user-display"></span></h1>
-            </div>
-            <p id="site-desc">Ein Echtzeit-Duino-Coin-Mining-Dashboard. Verfolge dein Guthaben, deine Hashrate, Miner und den Marktpreis an einem Ort.</p>
-            <div class="controls">
-                <button class="control-btn" id="theme-toggle" onclick="toggleTheme()">🌙 Dark</button>
-                <div class="lang-selector">
-                    <button onclick="setLang('en')">EN</button>
-                    <button onclick="setLang('de')">DE</button>
-                    <button onclick="setLang('fr')">FR</button>
-                </div>
+    <!-- --- DASHBOARD SYSTEM --- -->
+    <div class="dashboard-layout hidden" id="dashboard">
+        <header class="main-header">
+            <h1>DUCO-VISION <span><span id="user-display"></span></span></h1>
+            <div class="live-indicator-container">
+                <div class="pulse-dot"></div>
+                <div class="indicator-text">Live System Active</div>
             </div>
         </header>
 
-        <!-- STATS GRID -->
-        <div class="stats-grid">
-            <!-- Account Balance (Expandable) -->
-            <div class="card stat-card" data-expandable onclick="toggleCard(this)">
-                <h3 data-translate="balance">Kontostand</h3>
-                <div class="value" id="account-balance">0.00 DUCO</div>
-                <div class="card-description">Hier siehst du dein aktuelles Gesamtguthaben auf der Duino-Coin Blockchain. Es aktualisiert sich automatisch im Hintergrund.</div>
+        <!-- --- GRID & CARDS --- -->
+        <div class="grid-container">
+            <!-- Account Balance -->
+            <div class="card box-glow">
+                <div class="card-icon">💎</div>
+                <h3>Kontostand</h3>
+                <div class="stat-value" id="account-balance">0.00 <span class="currency">DUCO</span></div>
+                <span class="stat-desc">Aktuelles Gesamtguthaben auf der Blockchain.</span>
             </div>
 
             <!-- Active Miners -->
-            <div class="card stat-card" data-expandable onclick="toggleCard(this)">
-                <h3 data-translate="miners">Aktive Miner</h3>
-                <div class="value" id="miner-count">0</div>
-                <div class="card-description">Die Anzahl der Geräte (wie ESP32, Arduinos oder Raspberry Pis), die aktuell aktiv unter deinem Namen minen.</div>
+            <div class="card box-glow">
+                <div class="card-icon">⚡</div>
+                <h3>Aktive Miner</h3>
+                <div class="stat-value" id="miner-count">0</div>
+                <span class="stat-desc">Deine aktiven Mining-Geräte im Netzwerk.</span>
             </div>
 
             <!-- Total Hashrate -->
-            <div class="card stat-card" data-expandable onclick="toggleCard(this)">
-                <h3 data-translate="hashrate">Gesamte Hashrate</h3>
-                <div class="value" id="total-hashrate">0 kH/s</div>
-                <div class="card-description">Die kombinierte Rechenleistung all deiner aktiven Mining-Geräte, gemessen in Kilohashes pro Sekunde.</div>
+            <div class="card box-glow">
+                <div class="card-icon">⚙️</div>
+                <h3>Gesamte Hashrate</h3>
+                <div class="stat-value" id="total-hashrate">0 kH/s</div>
+                <span class="stat-desc">Kombinierte Rechenleistung all deiner Miner.</span>
             </div>
 
             <!-- Estimated Earnings -->
-            <div class="card stat-card" data-expandable onclick="toggleCard(this)">
-                <h3 data-translate="earnings">Geschätzter Tagesverdienst</h3>
-                <div class="value" id="estimated-earnings">0.00 DUCO / Tag</div>
-                <div class="card-description">Eine Hochrechnung basierend auf deiner aktuellen Hashrate, wie viele Coins du in den nächsten 24 Stunden generieren wirst.</div>
+            <div class="card box-glow">
+                <div class="card-icon">📈</div>
+                <h3>Tagesverdienst</h3>
+                <div class="stat-value" id="estimated-earnings">0.00 <span class="currency">DUCO/d</span></div>
+                <span class="stat-desc">Hochrechnung der nächsten 24 Stunden.</span>
             </div>
         </div>
 
-        <!-- LOWER SECTION -->
-        <div class="lower-section">
-            <!-- Progress & Price Chart -->
-            <div class="main-content">
-                <div class="card">
-                    <h3 data-translate="milestone">Nächster Meilenstein</h3>
-                    <div class="value" id="next-milestone-val" style="font-size: 24px; margin-bottom: 10px;">0 / 100 DUCO</div>
-                    <div class="progress-container">
-                        <div class="progress-bar" id="milestone-progress" style="width: 0%;"></div>
-                    </div>
-                    <div class="milestone-info">
-                        <span data-translate="progress">Fortschritt</span>
-                        <span id="milestone-percent">0%</span>
-                    </div>
-                </div>
-
-                <!-- Price Card -->
-                <div class="card price-card">
+        <!-- --- CHART & PRICE CARD --- -->
+        <div class="grid-container">
+            <div class="card chart-card box-glow">
+                <div class="chart-header">
                     <h3>DUCO Marktpreis</h3>
-                    <div class="price-row">
-                        <div class="value" id="duco-price">$0.000000</div>
-                        <span class="price-trend trend-stable" id="price-trend" data-translate="stable">Stabil</span>
-                    </div>
+                    <div id="trend-indicator" class="trend-neutral">STABIL</div>
                 </div>
+                <div class="stat-value" id="duco-price">$0.000000</div>
+                <span class="stat-desc" style="margin-bottom: 15px;">Aktueller Handelskurs des Duino-Coins.</span>
+                
+                <!-- Hier kann dein Chart-Canvas oder Element rein -->
+                <div class="chart-container" id="chart-area" style="display: none;"></div>
             </div>
+        </div>
 
-            <!-- Sidebar with Live Chat & Donation -->
-            <div class="sidebar">
-                <div class="card chat-card">
-                    <h3 data-translate="chat">💬 Live Chat</h3>
-                    <p data-translate="chatinfo" style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Unterhalte dich mit anderen Duco-Vision Nutzern in Echtzeit.</p>
-                    <div class="chat-messages" id="chat-box">
-                        <!-- Nachrichten werden hier generiert -->
-                    </div>
-                    <div class="chat-input-row">
-                        <input type="text" id="chat-input" placeholder="Nachricht schreiben..." autocomplete="off">
-                        <button id="send-chat-btn">➔</button>
-                    </div>
-                </div>
+        <!-- --- RGB DONATION SECTION --- -->
+        <div class="donation-section rgb-glow">
+            <h3>Support das Projekt</h3>
+            <p>Jeder DUCO hilft dabei, die Server online zu halten.</p>
+            <div class="donation-address">Spende an: <span class="highlight">LandoOtt</span></div>
+        </div>
 
-                <!-- Support Card -->
-                <div class="card support-card">
-                    <button class="rgb-btn" onclick="openDonateModal()" data-translate="donate">Duco spenden zur Unterstützung</button>
-                </div>
+        <!-- --- COMMENT / CHAT SECTION --- -->
+        <div class="card box-glow">
+            <div class="chart-header">
+                <h3>💬 Live Chat</h3>
             </div>
+            <div class="chat-info">Unterhalte dich mit anderen Duco-Vision Nutzern in Echtzeit.</div>
+            
+            <!-- Dein Iframe Widget für den Chat -->
+            <iframe src="https://widget.discord.me/server/dein-chat-link-falls-vorhanden" width="100%" height="400" allowtransparency="true" frameborder="0"></iframe>
         </div>
     </div>
 
-    <!-- MULTI-FUNCTIONAL MODAL / DETAILS VIEW -->
-    <div id="modal-overlay" onclick="closeModal()"></div>
-    <div id="details-modal">
-        <button class="close-btn" onclick="closeModal()">×</button>
-        <div id="modal-content"></div>
-    </div>
-
-    <!-- JAVASCRIPT LOGIK-BRÜCKE -->
+    <!-- --- JAVASCRIPT BRÜCKE ZU DEINER SCRIPT.JS --- -->
     <script>
-        const nameInput = document.getElementById('login-name-input');
-        const fallbackInput = document.getElementById('username-input');
-        const fallbackBtn = document.getElementById('login-btn');
+        const loginBtn = document.getElementById('login-btn');
+        const usernameInput = document.getElementById('username-input');
         const loginOverlay = document.getElementById('login-overlay');
-        const greetDiv = document.getElementById('login-greet');
         const dashboard = document.getElementById('dashboard');
+        const userDisplay = document.getElementById('user-display');
 
-        if (nameInput) {
-            nameInput.addEventListener('keydown', function(e) {
+        // Funktion, die den Login ausführt
+        function triggerLogin() {
+            const username = usernameInput.value.trim();
+            if (username !== "") {
+                if (userDisplay) userDisplay.textContent = `| ${username.toUpperCase()}`;
+                
+                // Blende den Login aus und das Dashboard ein
+                loginOverlay.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                
+                // Falls deine script.js globale Event-Listener hat, rufen wir sie hier auf
+                console.log("Login erfolgreich für: " + username);
+            } else {
+                alert("Bitte gib einen gültigen Namen ein.");
+            }
+        }
+
+        // Klick-Event für den Button
+        if (loginBtn) {
+            loginBtn.addEventListener('click', triggerLogin);
+        }
+
+        // Enter-Taste im Input-Feld abfangen
+        if (usernameInput) {
+            usernameInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
-                    const username = nameInput.value.trim();
-                    if (username !== "") {
-                        // Daten an script.js übergeben
-                        fallbackInput.value = username;
-                        
-                        // Login-UI ausblenden und Animation starten
-                        nameInput.disabled = true;
-                        document.getElementById('login-ui').style.opacity = '0';
-                        
-                        greetDiv.textContent = `WELCOME, ${username.toUpperCase()}`;
-                        greetDiv.style.opacity = '1';
-                        
-                        // Dashboard nach der Animation sichtbar machen und API starten
-                        setTimeout(() => {
-                            loginOverlay.classList.add('bg-mode');
-                            dashboard.classList.remove('hidden');
-                            fallbackBtn.click();
-                        }, 1800);
-                    } else {
-                        alert("Bitte gib einen gültigen Duino-Coin Namen ein.");
-                    }
+                    triggerLogin();
                 }
             });
-        }
-
-        // --- MODAL SYSTEM FIX ---
-        const modal = document.getElementById('details-modal');
-        const overlay = document.getElementById('modal-overlay');
-        const modalContent = document.getElementById('modal-content');
-
-        function toggleCard(card) {
-            if (window.innerWidth <= 768) {
-                openModal(card);
-            } else {
-                card.classList.toggle('expanded');
-            }
-        }
-
-        function openModal(card) {
-            const title = card.querySelector('h3') ? card.querySelector('h3').textContent : '';
-            const value = card.querySelector('.value') ? card.querySelector('.value').innerHTML : '';
-            const desc = card.querySelector('.card-description') ? card.querySelector('.card-description').textContent : '';
-            
-            modalContent.innerHTML = `
-                <h3 style="margin-top:0; color:var(--accent-color); text-transform:uppercase; font-size:14px;">${title}</h3>
-                <div class="value" style="font-size:28px; font-weight:bold; margin: 10px 0;">${value}</div>
-                <div class="card-description" style="display:block; font-size:13px; color:var(--text-muted); line-height:1.6;">${desc}</div>
-            `;
-
-            modal.style.opacity = '1';
-            modal.style.pointerEvents = 'all';
-            modal.style.transform = 'translate(-50%, -50%) scale(1)';
-            overlay.classList.add('active');
-        }
-
-        function closeModal() {
-            modal.style.opacity = '0';
-            modal.style.pointerEvents = 'none';
-            modal.style.transform = 'translate(-50%, -50%) scale(0.9)';
-            overlay.classList.remove('active');
-        }
-
-        function openDonateModal() {
-            modalContent.innerHTML = `
-                <h3 style="margin-top:0; color:var(--accent-color); text-transform:uppercase; font-size:14px;">Support das Projekt</h3>
-                <div class="value" style="font-size:20px; margin: 15px 0;">Spende Duino-Coin an: <strong style="color:#fff;">LandoOtt</strong></div>
-                <div class="card-description" style="display:block; font-size:13px; color:var(--text-muted);">Jeder DUCO hilft dabei, die Server am Laufen zu halten und neue Features zu entwickeln! Vielen Dank für deinen Support!</div>
-            `;
-            modal.style.opacity = '1';
-            modal.style.pointerEvents = 'all';
-            modal.style.transform = 'translate(-50%, -50%) scale(1)';
-            overlay.classList.add('active');
-        }
-
-        // --- MULTI-LANGUAGE TRANSLATIONS ---
-        const translations = {
-            en: {
-                balance: "Account Balance", miners: "Active Miners", hashrate: "Total Hashrate",
-                earnings: "Estimated Daily Earnings", milestone: "Next Milestone Progress",
-                desc: "A real-time Duino-Coin mining dashboard. Track your balance, hashrate, miners and market price — all in one place.",
-                chat: "💬 Live Chat", chatinfo: "Talk with other Duco-Vision users in real-time.",
-                progress: "Progress", donate: "Donate Duco to support",
-                rising: "Price Rising ▲", falling: "Price Falling ▼", stable: "Stable"
-            },
-            de: {
-                balance: "Kontostand", miners: "Aktive Miner", hashrate: "Gesamte Hashrate",
-                earnings: "Geschätzter Tagesverdienst", milestone: "Nächster Meilenstein",
-                desc: "Ein Echtzeit-Duino-Coin-Mining-Dashboard. Verfolge dein Guthaben, deine Hashrate, Miner und den Marktpreis an einem Ort.",
-                chat: "💬 Live Chat", chatinfo: "Unterhalte dich mit anderen Duco-Vision Nutzern in Echtzeit.",
-                progress: "Fortschritt", donate: "Duco spenden zur Unterstützung",
-                rising: "Preis steigt ▲", falling: "Preis fällt ▼", stable: "Stabil"
-            },
-            fr: {
-                balance: "Solde du compte", miners: "Mineurs actifs", hashrate: "Hashrate total",
-                earnings: "Gains journaliers estimés", milestone: "Progression du jalon",
-                desc: "Un tableau de bord de minage Duino-Coin en temps réel. Suivez votre solde, votre hashrate, vos mineurs et le prix du marché.",
-                chat: "💬 Chat en direct", chatinfo: "Discutez avec d'autres utilisateurs de Duco-Vision en temps réel.",
-                progress: "Progression", donate: "Faire un don Duco pour soutenir",
-                rising: "Prix en hausse ▲", falling: "Prix en baisse ▼", stable: "Stable"
-            }
-        };
-
-        function setLang(lang) {
-            const t = translations[lang];
-            if (!t) return;
-            document.getElementById('site-desc').textContent = t.desc;
-            document.querySelector('[data-translate="balance"]').textContent = t.balance;
-            document.querySelector('[data-translate="miners"]').textContent = t.miners;
-            document.querySelector('[data-translate="hashrate"]').textContent = t.hashrate;
-            document.querySelector('[data-translate="earnings"]').textContent = t.earnings;
-            document.querySelector('[data-translate="milestone"]').textContent = t.milestone;
-            document.querySelector('[data-translate="chat"]').textContent = t.chat;
-            document.querySelector('[data-translate="chatinfo"]').textContent = t.chatinfo;
-            document.querySelector('[data-translate="progress"]').textContent = t.progress;
-            document.querySelector('[data-translate="donate"]').textContent = t.donate;
-        }
-
-        function toggleTheme() {
-            document.body.classList.toggle('light-mode');
-            const btn = document.getElementById('theme-toggle');
-            btn.textContent = document.body.classList.contains('light-mode') ? '☀️ Light' : '🌙 Dark';
         }
     </script>
 </body>
