@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Duco-Vision Dashboard</title>
+    
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script src="cloudflare-helper.js"></script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1912,24 +1916,20 @@
             aiChatHistory.push({ role: 'user', content: text });
 
             try {
-                const _e='gAAAAABqSq9tHNtnE5rV9HhUrQ2-MyCacu0ouoob8fKmmungPZSsIad668dDi0RLAjbndulttRXnfs9dFKhPBdfP9l0WEs2-Pg4AE9fZv1YNJjeDB38CykJ2Cp4ljiiCphQK7Dh3XkMrL7h_5RIEFzh11bVbB_UOeZiQmfqBSSiBIJJR6kwx_bI=';
-                const _pw=['Duco','Vision','2026','!','Mascot'].join('');
-                const _bytes=CryptoJS.AES.decrypt(_e.replace(/-/g,'+').replace(/_/g,'/'),_pw);
-                const _p=[{join:()=>_bytes.toString(CryptoJS.enc.Utf8)}];
-                const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${_p.join('')}`,
-                        'HTTP-Referer': 'https://leanderott.github.io',
-                        'X-Title': 'Duco-Vision'
-                    },
-                    body: JSON.stringify({
-                        model: 'openrouter/free',
-                        max_tokens: 800,
-                        messages: [{ role: 'system', content: DUCO_AI_SYSTEM }, ...aiChatHistory]
-                    })
-                });
+                
+            const AI_PROXY_URL = "https://duco-ai-proxy.hotte.workers.dev";
+            const res = await fetch(AI_PROXY_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'openrouter/free',
+                    max_tokens: 800,
+                    messages: [{ role: 'system', content: DUCO_AI_SYSTEM }, ...aiChatHistory]
+                })
+            });
+            const data = await res.json();
                 const data = await res.json();
                 const reply = data.choices?.[0]?.message?.content || 'Sorry, I could not get a response. 😕';
                 aiChatHistory.push({ role: 'assistant', content: reply });
