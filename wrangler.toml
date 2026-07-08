@@ -1,0 +1,19 @@
+name = "duco-ai-proxy"
+main = "duco-ai-worker.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production]
+name = "duco-ai-proxy-prod"
+routes = [
+  { pattern = "duco-ai-proxy.leanderotternberg.workers.dev", zone_name = "leanderotternberg.workers.dev" }
+]
+vars = { ENVIRONMENT = "production" }
+
+# Secrets sollten in Cloudflare Dashboard gespeichert werden:
+# 1. Gehe zu Cloudflare Dashboard
+# 2. Wähle deinen Worker
+# 3. Settings > Secrets & Variables
+# 4. Klick "Add secret"
+# 5. Name: OPENROUTER_API_KEY
+# 6. Value: sk_live_... (dein OpenRouter API Key)
