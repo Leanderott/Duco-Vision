@@ -437,3 +437,130 @@ function updateStarsDisplay() {
         result.textContent = `Avg: ${average.toFixed(1)} / 5 stars (${totalVotes} votes)`;
     }
 }
+
+// =====================================================
+// AI CHAT FUNCTIONS (OpenRouter über Cloudflare Worker)
+// =====================================================
+
+// Worker URL - ERSETZE DIESE MIT DEINER WORKER URL!
+const AI_PROXY_URL = "https://hidden-grass-77e2.leanderotternberg.workers.dev";
+
+async function sendAIChat() {
+    const input = document.getElementById('ai-chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // User Message anzeigen
+    const messagesDiv = document.getElementById('ai-chat-messages');
+    const userMsg = document.createElement('div');
+    userMsg.className = 'ai-chat-msg user';
+    userMsg.textContent = message;
+    messagesDiv.appendChild(userMsg);
+    
+    input.value = '';
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    
+    // Loading indicator
+    const botMsg = document.createElement('div');
+    botMsg.className = 'ai-chat-msg bot loading';
+    botMsg.textContent = '⏳ Thinking...';
+    messagesDiv.appendChild(botMsg);
+    
+    try {
+        const response = await fetch(AI_PROXY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'openrouter/auto',
+                messages: [
+                    { 
+                        role: 'system', 
+                        content: 'Du bist ein hilfreicher Duino-Coin Mining Assistant. Antworte kurz, hilfreich und informativ auf Deutsch. Beantworte Fragen zu Mining, Duino-Coin, Hardware und dieser Dashboard-App.'
+                    },
+                    { role: 'user', content: message }
+                ],
+                max_tokens: 300
+            }),
+        });
+        
+        const data = await response.json();
+        
+        botMsg.classList.remove('loading');
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+            botMsg.textContent = data.choices[0].message.content;
+        } else {
+            botMsg.textContent = '❌ Error: No response from AI';
+        }
+    } catch (error) {
+        botMsg.classList.remove('loading');
+        botMsg.textContent = '❌ Connection error: ' + error.message;
+        console.error('AI Error:', error);
+    }
+    
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+// FAB floating button version
+async function sendAI() {
+    const input = document.getElementById('ai-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    const messagesDiv = document.getElementById('ai-messages');
+    
+    // User message
+    const userMsg = document.createElement('div');
+    userMsg.className = 'ai-msg user';
+    userMsg.textContent = message;
+    messagesDiv.appendChild(userMsg);
+    
+    input.value = '';
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    
+    // Bot loading
+    const botMsg = document.createElement('div');
+    botMsg.className = 'ai-msg bot loading';
+    botMsg.textContent = '⏳ Thinking...';
+    messagesDiv.appendChild(botMsg);
+    
+    try {
+        const response = await fetch(AI_PROXY_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: 'openrouter/auto',
+                messages: [
+                    { 
+                        role: 'system', 
+                        content: 'Du bist ein hilfreicher Duino-Coin Assistant. Gib kurze, hilfreiche Antworten auf Deutsch.'
+                    },
+                    { role: 'user', content: message }
+                ],
+                max_tokens: 300
+            }),
+        });
+        
+        const data = await response.json();
+        botMsg.classList.remove('loading');
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+            botMsg.textContent = data.choices[0].message.content;
+        } else {
+            botMsg.textContent = '❌ Error';
+        }
+    } catch (error) {
+        botMsg.classList.remove('loading');
+        botMsg.textContent = '❌ Error: ' + error.message;
+    }
+    
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+// Toggle AI Panel
+function toggleAI() {
+    const panel = document.getElementById('ai-panel');
+    if (panel) {
+        panel.classList.toggle('open');
+    }
+}
