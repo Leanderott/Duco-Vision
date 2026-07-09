@@ -1,7 +1,7 @@
 window.onload = function() {
     document.getElementById('username-input').value = "";
 };
-
+ 
 let username = "";
 let priceChart;
 let lastPrice = 0;
@@ -12,39 +12,48 @@ let liveBalance = 0;
 let liveEarningsPerSecond = 0;
 let liveCounterInterval = null;
 let balanceHistory = []; // Speichert [{balance, time}] im Duco-Monitor-Stil
-
+ 
 const milestones = [1, 100, 500, 1000, 10000, 100000, 1000000, 10000000, 100000000];
-
+ 
 const loginOverlay = document.getElementById('login-overlay');
 const dashboard = document.getElementById('dashboard');
 const usernameInput = document.getElementById('username-input');
 const loginBtn = document.getElementById('login-btn');
 const userDisplay = document.getElementById('user-display');
 const trendIndicator = document.getElementById('trend-indicator');
-
+ 
 let memoryStorage = {};
-
+ 
 // --- HILFSFUNKTION FÜR HARDWARE BREAKDOWN ---
 function renderHardwareBreakdown(miners, currentMinerCount) {
     const breakdownContainer = document.getElementById('hardware-breakdown');
     if (currentMinerCount === 0) {
         breakdownContainer.innerHTML = `<p style="color:var(--text-muted); font-size:14px;">Waiting for miners...</p>`;
-    } else {
-        breakdownContainer.innerHTML = "";
-        miners.forEach((miner) => {
-            const hr = (parseFloat(miner.hashrate) / 1000).toFixed(2);
-            const software = miner.software || "Unknown Device";
-            const identifier = miner.identifier && miner.identifier !== "None" ? ` · ${miner.identifier}` : ``;
-            breakdownContainer.innerHTML += `
-                <div class="hardware-item">
-                    <span>⚙️ ${software}${identifier}</span>
-                    <strong>${hr} KH/s</strong>
-                </div>
-            `;
-        });
+        return;
+    }
+ 
+    // Group miners by software name
+    const groups = {};
+    miners.forEach(miner => {
+        const software = miner.software || "Unknown Device";
+        if (!groups[software]) groups[software] = { count: 0, totalHr: 0 };
+        groups[software].count++;
+        groups[software].totalHr += parseFloat(miner.hashrate) || 0;
+    });
+ 
+    breakdownContainer.innerHTML = "";
+    for (const [software, data] of Object.entries(groups)) {
+        const hrKhs = (data.totalHr / 1000).toFixed(2);
+        const coreLabel = data.count > 1 ? ` (${data.count} cores)` : '';
+        breakdownContainer.innerHTML += `
+            <div class="hardware-item">
+                <span>⚙️ ${software}${coreLabel}</span>
+                <strong>${hrKhs} KH/s</strong>
+            </div>
+        `;
     }
 }
-
+ 
 function safeGetItem(key) {
     try {
         return localStorage.getItem(key);
@@ -52,7 +61,7 @@ function safeGetItem(key) {
         return memoryStorage[key] || null;
     }
 }
-
+ 
 function safeSetItem(key, value) {
     try {
         localStorage.setItem(key, value);
@@ -60,7 +69,7 @@ function safeSetItem(key, value) {
         memoryStorage[key] = value;
     }
 }
-
+ 
 loginBtn.addEventListener('click', () => {
     username = usernameInput.value.trim();
     if (username !== "") {
@@ -76,14 +85,14 @@ loginBtn.addEventListener('click', () => {
         fetchGlobalMarket();
         
         // Getrennte Intervalle: Alle 10 Sekunden (Absolut stabil und laggfrei)
-        setInterval(fetchUserData, 10000);
+        setInterval(fetchUserData, 5000);
         setInterval(fetchGlobalMarket, 10000);
-
+ 
     } else {
         alert("Please enter a valid Duino-Coin username.");
     }
 });
-
+ 
 function playSound(type) {
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
@@ -117,7 +126,7 @@ function playSound(type) {
         osc.stop(audioCtx.currentTime + 0.4);
     }
 }
-
+ 
 function triggerAchievementNotification(milestoneValue) {
     const popup = document.getElementById('achievement-popup');
     document.getElementById('achievement-text').innerHTML = `You just passed the <strong>${milestoneValue.toLocaleString()} DUCO</strong> Milestone!`;
@@ -127,7 +136,7 @@ function triggerAchievementNotification(milestoneValue) {
     
     setTimeout(() => { popup.classList.remove('show'); }, 5000);
 }
-
+ 
 function handleMilestones(currentBalance) {
     let currentTarget = milestones[0];
     let previousTarget = 0;
@@ -147,7 +156,7 @@ function handleMilestones(currentBalance) {
         }
     }
     safeSetItem(`duco_milestone_${username}`, currentTarget);
-
+ 
     document.getElementById('next-milestone-val').textContent = `${currentTarget.toLocaleString()} DUCO`;
     let range = currentTarget - previousTarget;
     let progressInRange = currentBalance - previousTarget;
@@ -157,13 +166,13 @@ function handleMilestones(currentBalance) {
     
     document.getElementById('milestone-progress').style.width = `${percent}%`;
 }
-
+ 
 function initChart() {
     const ctx = document.getElementById('priceChart').getContext('2d');
     const gradient = ctx.createLinearGradient(0, 0, 0, 300);
     gradient.addColorStop(0, 'rgba(255, 102, 0, 0.35)');
     gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
+ 
     priceChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -197,7 +206,7 @@ function initChart() {
         }
     });
 }
-
+ 
 function updateChartColor(trend, currentPrice) {
     if (!priceChart || !priceChart.data.datasets[0]) return;
     const ctx = document.getElementById('priceChart').getContext('2d');
@@ -226,17 +235,17 @@ function updateChartColor(trend, currentPrice) {
     priceChart.data.datasets[0].backgroundColor = newGradient;
     priceChart.update();
 }
-
+ 
 // --- USER-DATEN ÜBER CORSPROXY ---
 function fetchUserData() {
     $.ajax({
-        url: `https://corsproxy.io/?${encodeURIComponent('https://server.duinocoin.com/v2/users/' + username)}`,
+        url: `https://corsproxy.io/?${encodeURIComponent('https://server.duinocoin.com/v2/users/' + username + '?t=' + Date.now())}`,
         method: 'GET',
         dataType: 'json',
         success: function(userData) {
             if (userData && userData.success && userData.result) {
                 const result = userData.result;
-
+ 
                 // Balance ausgeben (mit formatiertem USD-Wert darunter)
                 const userBalance = parseFloat(result.balance.balance) || 0;
                 liveBalance = userBalance;
@@ -244,23 +253,23 @@ function fetchUserData() {
                 document.getElementById('account-balance').innerHTML =
                     `${userBalance.toFixed(8)} <span class="currency">DUCO</span><br><span style="font-size:14px;color:var(--text-muted);">≈ $${balanceUsd.toFixed(6)} USD</span>`;
                 handleMilestones(userBalance);
-
+ 
                 // Miner Berechnungen
                 let totalHashrate = 0;
                 let hardwareCounts = {};
                 let currentMinerCount = 0;
                 calculatedDailyDuco = 0;
-
+ 
                 const miners = result.miners || [];
                 miners.forEach(miner => {
                     currentMinerCount++;
                     const hr = parseFloat(miner.hashrate) || 0;
                     totalHashrate += hr;
-
+ 
                     const software = miner.software || "Unknown Device";
                     hardwareCounts[software] = (hardwareCounts[software] || 0) + 1;
                 });
-
+ 
                 // --- SIUNUS / DUCO MONITOR BALANCE-DELTA RECHNER ---
                 const now = Date.now();
                 
@@ -274,7 +283,7 @@ function fetchUserData() {
                 
                 // Verlaufshistorie kompakt halten
                 if (balanceHistory.length > 50) balanceHistory.shift(); 
-
+ 
                 let deltaWorked = false;
                 
                 // Berechnung erfolgt immer stabil zwischen dem ersten aufgezeichneten Login-Wert und dem Jetzt-Zustand
@@ -290,7 +299,7 @@ function fetchUserData() {
                         deltaWorked = true;
                     }
                 }
-
+ 
                 // Wartestatus anzeigen, falls die API beim ersten Aufruf noch keinen Zuwachs hat
                 if (!deltaWorked) {
                     document.getElementById('estimated-earnings').innerHTML =
@@ -304,26 +313,26 @@ function fetchUserData() {
                     renderHardwareBreakdown(miners, currentMinerCount);
                     return;
                 }
-
+ 
                 liveEarningsPerSecond = calculatedDailyDuco / 86400;
-
+ 
                 // Miner-Anzahl aktualisieren & Alarm triggern
                 document.getElementById('miner-count').textContent = currentMinerCount;
                 if (lastMinerCount !== -1 && currentMinerCount < lastMinerCount) {
                     playSound('alarm');
                 }
                 lastMinerCount = currentMinerCount;
-
+ 
                 // Hashrate und berechnete Gewinne anzeigen
                 const hashrateKhas = totalHashrate / 1000;
                 document.getElementById('total-hashrate').innerHTML = `${hashrateKhas.toFixed(4)} <span class="currency">KH/s</span>`;
                 
                 document.getElementById('estimated-earnings').innerHTML =
                     `≈ ${calculatedDailyDuco.toFixed(4)} <span class="currency">DUCO</span>`;
-
+ 
                 // Hardware Breakdown rendern
                 renderHardwareBreakdown(miners, currentMinerCount);
-
+ 
                 const dailyUsd = calculatedDailyDuco * currentPriceUsd;
                 document.getElementById('usd-earnings').innerHTML = `$${dailyUsd.toFixed(6)} <span class="currency">USD</span>`;
             }
@@ -333,7 +342,7 @@ function fetchUserData() {
         }
     });
 }
-
+ 
 // --- MARKT PREIS DIREKT ÜBER OFFIZIELLE APIS (DIREKT-AJAX FÜR DIAGRAMM) ---
 function fetchGlobalMarket() {
     $.ajax({
@@ -355,22 +364,22 @@ function fetchGlobalMarket() {
         }
     });
 }
-
+ 
 function processMarketData(apiData) {
     currentPriceUsd = apiData["Duco price"] || 0.00005;
     const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
+ 
     const dailyUsd = calculatedDailyDuco * currentPriceUsd;
     document.getElementById('usd-earnings').innerHTML = `$${dailyUsd.toFixed(6)} <span class="currency">USD</span>`;
-
+ 
     if (priceChart.data.labels.length > 15) {
         priceChart.data.labels.shift();
         priceChart.data.datasets[0].data.shift();
     }
-
+ 
     priceChart.data.labels.push(currentTime);
     priceChart.data.datasets[0].data.push(currentPriceUsd);
-
+ 
     if (lastPrice !== 0) {
         if (currentPriceUsd > lastPrice) {
             updateChartColor('up', currentPriceUsd);
@@ -384,7 +393,7 @@ function processMarketData(apiData) {
     lastPrice = currentPriceUsd;
     priceChart.update();
 }
-
+ 
 // --- GLOBALER BEWERTUNGS-DURCHSCHNITT (STERNE-SYSTEM) ---
 function initRatingSystem() {
     const stars = document.querySelectorAll('#star-row .star');
@@ -400,10 +409,10 @@ function initRatingSystem() {
             updateStarsDisplay();
         };
     });
-
+ 
     updateStarsDisplay();
 }
-
+ 
 function updateStarsDisplay() {
     const stars = document.querySelectorAll('#star-row .star');
     const result = document.getElementById('rating-result');
@@ -418,7 +427,7 @@ function updateStarsDisplay() {
         let sum = ratingsArray.reduce((a, b) => a + b, 0);
         average = sum / totalVotes;
     }
-
+ 
     const roundedAverage = Math.round(average);
     stars.forEach(s => {
         if (parseInt(s.getAttribute('data-v')) <= roundedAverage) {
@@ -427,7 +436,7 @@ function updateStarsDisplay() {
             s.classList.remove('active');
         }
     });
-
+ 
     const currentLang = safeGetItem('duco_lang') || 'en';
     if (currentLang === 'de') {
         result.textContent = `Ø ${average.toFixed(1)} / 5 Sterne (${totalVotes} Stimmen)`;
@@ -435,132 +444,5 @@ function updateStarsDisplay() {
         result.textContent = `Moyenne: ${average.toFixed(1)} / 5 (${totalVotes} votes)`;
     } else {
         result.textContent = `Avg: ${average.toFixed(1)} / 5 stars (${totalVotes} votes)`;
-    }
-}
-
-// =====================================================
-// AI CHAT FUNCTIONS (OpenRouter über Cloudflare Worker)
-// =====================================================
-
-// Worker URL - ERSETZE DIESE MIT DEINER WORKER URL!
-const AI_PROXY_URL = "https://hidden-grass-77e2.leanderotternberg.workers.dev";
-
-async function sendAIChat() {
-    const input = document.getElementById('ai-chat-input');
-    const message = input.value.trim();
-    
-    if (!message) return;
-    
-    // User Message anzeigen
-    const messagesDiv = document.getElementById('ai-chat-messages');
-    const userMsg = document.createElement('div');
-    userMsg.className = 'ai-chat-msg user';
-    userMsg.textContent = message;
-    messagesDiv.appendChild(userMsg);
-    
-    input.value = '';
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    
-    // Loading indicator
-    const botMsg = document.createElement('div');
-    botMsg.className = 'ai-chat-msg bot loading';
-    botMsg.textContent = '⏳ Thinking...';
-    messagesDiv.appendChild(botMsg);
-    
-    try {
-        const response = await fetch(AI_PROXY_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: 'openrouter/auto',
-                messages: [
-                    { 
-                        role: 'system', 
-                        content: 'Du bist ein hilfreicher Duino-Coin Mining Assistant. Antworte kurz, hilfreich und informativ auf Deutsch. Beantworte Fragen zu Mining, Duino-Coin, Hardware und dieser Dashboard-App.'
-                    },
-                    { role: 'user', content: message }
-                ],
-                max_tokens: 300
-            }),
-        });
-        
-        const data = await response.json();
-        
-        botMsg.classList.remove('loading');
-        if (data.choices && data.choices[0] && data.choices[0].message) {
-            botMsg.textContent = data.choices[0].message.content;
-        } else {
-            botMsg.textContent = '❌ Error: No response from AI';
-        }
-    } catch (error) {
-        botMsg.classList.remove('loading');
-        botMsg.textContent = '❌ Connection error: ' + error.message;
-        console.error('AI Error:', error);
-    }
-    
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
-
-// FAB floating button version
-async function sendAI() {
-    const input = document.getElementById('ai-input');
-    const message = input.value.trim();
-    
-    if (!message) return;
-    
-    const messagesDiv = document.getElementById('ai-messages');
-    
-    // User message
-    const userMsg = document.createElement('div');
-    userMsg.className = 'ai-msg user';
-    userMsg.textContent = message;
-    messagesDiv.appendChild(userMsg);
-    
-    input.value = '';
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    
-    // Bot loading
-    const botMsg = document.createElement('div');
-    botMsg.className = 'ai-msg bot loading';
-    botMsg.textContent = '⏳ Thinking...';
-    messagesDiv.appendChild(botMsg);
-    
-    try {
-        const response = await fetch(AI_PROXY_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: 'openrouter/auto',
-                messages: [
-                    { 
-                        role: 'system', 
-                        content: 'Du bist ein hilfreicher Duino-Coin Assistant. Gib kurze, hilfreiche Antworten auf Deutsch.'
-                    },
-                    { role: 'user', content: message }
-                ],
-                max_tokens: 300
-            }),
-        });
-        
-        const data = await response.json();
-        botMsg.classList.remove('loading');
-        if (data.choices && data.choices[0] && data.choices[0].message) {
-            botMsg.textContent = data.choices[0].message.content;
-        } else {
-            botMsg.textContent = '❌ Error';
-        }
-    } catch (error) {
-        botMsg.classList.remove('loading');
-        botMsg.textContent = '❌ Error: ' + error.message;
-    }
-    
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
-
-// Toggle AI Panel
-function toggleAI() {
-    const panel = document.getElementById('ai-panel');
-    if (panel) {
-        panel.classList.toggle('open');
     }
 }
